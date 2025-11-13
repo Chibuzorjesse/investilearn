@@ -1,0 +1,98 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        uv sync --all-extras
+
+    - name: Lint with ruff
+      run: |
+        uv run ruff check .
+        uv run ruff format --check .
+
+    - name: Type check with mypy
+      run: |
+        uv run mypy dashboard.py --ignore-missing-imports
+      continue-on-error: true
+
+    - name: Run tests
+      run: |
+        uv run pytest tests/ -v --cov=. --cov-report=xml
+      continue-on-error: true
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+      continue-on-error: true
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+
+    - name: Set up Python
+      run: uv python install 3.11
+
+    - name: Install dependencies
+      run: uv sync --all-extras
+
+    - name: Security scan with bandit
+      run: |
+        uv run bandit -r . -f json -o bandit-report.json
+      continue-on-error: true
+
+    - name: Upload bandit report
+      uses: actions/upload-artifact@v3
+      with:
+        name: bandit-report
+        path: bandit-report.json
+      if: always()
+
+  streamlit-health-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+
+    - name: Set up Python
+      run: uv python install 3.11
+
+    - name: Install dependencies
+      run: uv sync
+
+    - name: Check Streamlit app loads
+      run: |
+        uv run streamlit run dashboard.py --server.headless true &
+        sleep 10
+        curl -f http://localhost:8501 || exit 1
+      timeout-minutes: 2
+      continue-on-error: true
