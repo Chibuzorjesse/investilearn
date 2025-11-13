@@ -1,0 +1,23 @@
+# Global code owners
+* @akhilkarra
+
+# Python code
+*.py @akhilkarra
+
+# CI/CD and workflows
+/.github/ @akhilkarra
+
+# Documentation
+*.md @akhilkarra
+/docs/ @akhilkarra
+
+# Configuration files
+pyproject.toml @akhilkarra
+.pre-commit-config.yaml @akhilkarra
+requirements.txt @akhilkarra
+
+# Utility modules
+/utils/ @akhilkarra
+
+# Tests
+/tests/ @akhilkarra
