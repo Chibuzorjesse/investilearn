@@ -139,9 +139,13 @@ if search_query:
         with col_header2:
             price = info.get("currentPrice", info.get("regularMarketPrice", "N/A"))
             prev_close = info.get("previousClose", 0)
-            change = (
-                ((price - prev_close) / prev_close * 100) if (price != "N/A" and prev_close) else 0
-            )
+            try:
+                if price != "N/A" and prev_close != 0:
+                    change = (price - prev_close) / prev_close * 100
+                else:
+                    change = 0
+            except (TypeError, ZeroDivisionError):
+                change = 0
             st.metric("Price", f"${price:.2f}" if price != "N/A" else "N/A", f"{change:+.2f}%")
         with col_header3:
             market_cap = info.get("marketCap", 0)
@@ -327,17 +331,37 @@ if search_query:
                 horizontal=True,
             )
 
+            # Filter news items based on selected filter
+            if news_filter != "All News" and news_items:
+                filter_keywords = {
+                    "Earnings Reports": ["earnings", "results", "quarter", "q1", "q2", "q3", "q4"],
+                    "Press Releases": ["press release", "announces", "announcement"],
+                    "Market Analysis": ["analysis", "market", "outlook", "forecast", "trend"],
+                }
+                keywords = filter_keywords.get(news_filter, [])
+                filtered_news_items = [
+                    item
+                    for item in news_items
+                    if any(
+                        kw.lower()
+                        in (item.get("title", "") + " " + item.get("summary", "")).lower()
+                        for kw in keywords
+                    )
+                ]
+            else:
+                filtered_news_items = news_items
+
             # Display news items
             st.markdown("#### Recent Headlines")
 
-            if news_items:
+            if filtered_news_items:
                 # Temporary note until ML is implemented
                 st.caption(
                     "📊 Currently showing recent news. "
                     "AI curation will prioritize relevance to your analysis."
                 )
 
-                for item in news_items[:5]:  # Show top 5 news items
+                for item in filtered_news_items[:5]:  # Show top 5 news items
                     with st.container():
                         title = item.get("title", "No title available")
                         publisher = item.get("publisher", "Unknown source")

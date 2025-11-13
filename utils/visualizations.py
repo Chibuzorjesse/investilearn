@@ -114,7 +114,7 @@ def create_income_sankey(data):
         return fig
 
     except Exception as e:
-        logger.warning(f"Error creating income statement Sankey: {str(e)}")
+        logger.warning("Error creating income statement Sankey: %s", str(e))
         return create_empty_sankey()
 
 
@@ -188,7 +188,10 @@ def create_balance_sankey(data):
             return create_empty_sankey()
 
         nodes = ["Total Assets", "Liabilities", "Equity"]
-        flows = [(0, 1, total_liabilities), (0, 2, stockholder_equity)]
+        flows = [
+            (0, 1, total_liabilities),  # Assets -> Liabilities
+            (0, 2, stockholder_equity),  # Assets -> Equity
+        ]
 
         fig = go.Figure(
             data=[
