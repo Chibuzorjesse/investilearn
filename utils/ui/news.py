@@ -56,7 +56,10 @@ def render_news_section(search_query: str, company_name: str) -> None:
         if news_filter != "All News":
             st.info(f"No {news_filter.lower()} found for this ticker")
         else:
-            st.info("No recent news available for this ticker")
+            st.warning(
+                "📰 No recent news available from data provider. "
+                "Check the company's investor relations page or major financial news sites."
+            )
 
 
 def _filter_by_confidence(news_items: list) -> list:

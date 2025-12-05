@@ -569,8 +569,8 @@ def create_cashflow_sankey(data):
             data=[
                 go.Sankey(
                     node={
-                        "pad": 15,
-                        "thickness": 20,
+                        "pad": 30,
+                        "thickness": 15,
                         "line": {"color": "white", "width": 1.5},
                         "label": nodes,
                         "color": node_colors,
@@ -925,8 +925,8 @@ def create_balance_sankey(data):
                 go.Sankey(
                     arrangement="snap",  # Use snap positioning
                     node={
-                        "pad": 15,
-                        "thickness": 20,
+                        "pad": 30,
+                        "thickness": 15,
                         "line": {"color": "white", "width": 1.5},
                         "label": nodes,
                         "color": node_colors,
