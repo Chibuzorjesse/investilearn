@@ -104,6 +104,10 @@ def get_news(ticker, max_items=10):
             # yfinance returns nested structure: item['content'] has the actual data
             content = item.get("content", item)  # Fallback to item if no content key
 
+            # Skip if content is None or not a dictionary
+            if not content or not isinstance(content, dict):
+                continue
+
             # Extract and normalize fields
             normalized = {
                 "title": content.get("title", "No title available"),

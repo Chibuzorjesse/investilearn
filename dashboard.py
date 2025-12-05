@@ -141,22 +141,26 @@ if search_query:
 
         st.markdown("---")
 
-        # Three column layout
-        col1, col2, col3 = st.columns([1, 1, 1])
+        # Tab-based navigation for better mobile experience
+        st.info(
+            "💡 **Navigate the sections below** to explore financial statements, "
+            "key ratios, and AI-curated news"
+        )
 
-        # Left: Financial Statements
-        with col1:
+        tab1, tab2, tab3 = st.tabs(
+            ["📊 Financial Statements", "📈 Key Ratios", "📰 News & Updates"]
+        )
+
+        with tab1:
             render_financial_statements(income_stmt, balance_sheet, cash_flow)
 
-        # Middle: Key Ratios
-        with col2:
+        with tab2:
             render_ratios_section(ratios, company_name, search_query)
 
-        # Right: News & Updates
-        with col3:
+        with tab3:
             render_news_section(search_query, company_name)
 
-        # Additional resources below the main columns
+        # Additional resources below the tabs
         ticker_symbol = info.get("symbol", search_query)
         render_additional_resources(ticker=ticker_symbol, cik=ticker_symbol)
 
