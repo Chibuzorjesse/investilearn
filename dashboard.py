@@ -8,7 +8,12 @@ from utils.data_fetcher import (
     get_news,
     get_stock_info,
 )
-from utils.ratio_calculator import calculate_ratios, format_ratio_value, get_ratio_metrics
+from utils.news_ai import get_recommender
+from utils.ratio_calculator import (
+    calculate_ratios,
+    format_ratio_value,
+    get_ratio_metrics,
+)
 from utils.visualizations import create_sankey_diagram
 
 
@@ -316,57 +321,88 @@ if search_query:
         with col3:
             # AI badge in title (HAX Guideline G1)
             st.markdown(
-                '### 📰 Relevant News & Updates <span class="ai-badge">AI Ready</span>',
+                '### 📰 Relevant News & Updates <span class="ai-badge">AI Powered</span>',
                 unsafe_allow_html=True,
             )
-            st.markdown("*Stay informed with latest company developments*")
+            st.markdown("*AI-curated news based on relevance and quality*")
 
             # Fetch news
-            news_items = get_news(search_query, max_items=10)
+            news_items = get_news(search_query, max_items=20)
 
-            # News filter (for future categorization)
+            # Initialize AI recommender
+            recommender = get_recommender()
+
+            # News filter
             news_filter = st.radio(
                 "News Type",
                 ["All News", "Earnings Reports", "Press Releases", "Market Analysis"],
                 horizontal=True,
             )
 
-            # Filter news items based on selected filter
-            if news_filter != "All News" and news_items:
-                filter_keywords = {
-                    "Earnings Reports": ["earnings", "results", "quarter", "q1", "q2", "q3", "q4"],
-                    "Press Releases": ["press release", "announces", "announcement"],
-                    "Market Analysis": ["analysis", "market", "outlook", "forecast", "trend"],
-                }
-                keywords = filter_keywords.get(news_filter, [])
-                filtered_news_items = [
-                    item
-                    for item in news_items
-                    if any(
-                        kw.lower()
-                        in (item.get("title", "") + " " + item.get("summary", "")).lower()
-                        for kw in keywords
-                    )
-                ]
-            else:
-                filtered_news_items = news_items
+            # AI-rank the news
+            if news_items:
+                # Get company name for better matching
+                company_name = info.get("longName", search_query)
 
-            # Display news items
-            st.markdown("#### Recent Headlines")
-
-            if filtered_news_items:
-                # Temporary note until ML is implemented
-                st.caption(
-                    "📊 Currently showing recent news. "
-                    "AI curation will prioritize relevance to your analysis."
+                # Rank news with AI
+                ranked_news = recommender.rank_news(
+                    news_items,
+                    search_query,
+                    company_name,
+                    user_context=None,  # Future: user preferences
                 )
 
-                for item in filtered_news_items[:5]:  # Show top 5 news items
+                # Filter by category if needed
+                if news_filter != "All News":
+                    filtered_news_items = recommender.filter_by_category(ranked_news, news_filter)
+                else:
+                    filtered_news_items = ranked_news
+            else:
+                filtered_news_items = []
+
+            # Display news items
+            st.markdown("#### Top Stories")
+
+            if filtered_news_items:
+                # Show AI confidence threshold setting
+                if st.session_state.get("ai_enabled", True):
+                    confidence_filter = st.session_state.get("confidence_level", "Show all")
+
+                    # Filter by confidence if needed
+                    if confidence_filter == "Medium+":
+                        display_items = [
+                            item
+                            for item in filtered_news_items
+                            if item.get("ai_confidence") in ["high", "medium"]
+                        ]
+                    elif confidence_filter == "High only":
+                        display_items = [
+                            item
+                            for item in filtered_news_items
+                            if item.get("ai_confidence") == "high"
+                        ]
+                    else:
+                        display_items = filtered_news_items
+                else:
+                    display_items = filtered_news_items
+
+                # AI status message
+                if st.session_state.get("ai_enabled", True):
+                    st.success(f"🤖 AI ranked {len(display_items)} articles by relevance")
+                else:
+                    st.caption("📊 Showing chronological news (AI disabled)")
+
+                for idx, item in enumerate(display_items[:5], 1):  # Show top 5
                     with st.container():
                         title = item.get("title", "No title available")
                         publisher = item.get("publisher", "Unknown source")
                         link = item.get("link", "#")
                         published_time = item.get("providerPublishTime", 0)
+
+                        # AI scoring info
+                        ai_score = item.get("ai_score", 0)
+                        ai_confidence = item.get("ai_confidence", "medium")
+                        ai_explanation = item.get("ai_explanation", {})
 
                         # Format timestamp
                         if published_time:
@@ -374,30 +410,57 @@ if search_query:
                         else:
                             date_str = "Recent"
 
-                        st.markdown(f"**📌 {title}**")
+                        # Confidence badge
+                        confidence_badges = {
+                            "high": "🟢",
+                            "medium": "🟡",
+                            "low": "🔴",
+                        }
+                        badge = confidence_badges.get(ai_confidence, "⚪")
+
+                        st.markdown(f"**{badge} #{idx}: {title}**")  # Rank number
                         st.caption(f"{publisher} • {date_str}")
+
+                        # Show relevance score if AI enabled
+                        if st.session_state.get("ai_enabled", True):
+                            st.caption(
+                                f"Relevance Score: {ai_score:.0%} | "
+                                f"Confidence: {ai_confidence.title()}"
+                            )
 
                         # Show link to article
                         st.markdown(f"[Read more →]({link})")
 
-                        # Transparency placeholder (HAX Guideline G11)
-                        # Will be replaced with actual ML reasoning
-                        with st.expander("🔍 Why is this shown?", expanded=False):
-                            st.caption(
-                                """
-                                **Current:** Showing recent news chronologically
+                        # AI Transparency (HAX Guideline G11, G12)
+                        with st.expander("🔍 Why is this recommended?", expanded=False):
+                            if st.session_state.get("ai_enabled", True):
+                                st.markdown("**AI Explanation:**")
 
-                                **Coming soon - AI will explain:**
-                                - Relevance score to your current analysis
-                                - Matched keywords and topics
-                                - Source credibility rating
-                                - Sentiment balance considerations
-                                """
-                            )
+                                # Show all factors
+                                for factor, explanation in ai_explanation.items():
+                                    st.markdown(f"- **{factor.title()}**: {explanation}")
+
+                                st.markdown("---")
+                                st.caption(
+                                    f"Overall relevance: {ai_score:.0%} | "
+                                    f"Confidence: {ai_confidence}"
+                                )
+                                st.caption(
+                                    "💡 AI considers: topic relevance, recency, "
+                                    "source credibility, and sentiment balance"
+                                )
+                            else:
+                                st.caption(
+                                    "Enable AI features in the sidebar to see "
+                                    "detailed recommendations"
+                                )
 
                         st.markdown("---")
             else:
-                st.info("No recent news available for this ticker")
+                if news_filter != "All News":
+                    st.info(f"No {news_filter.lower()} found for this ticker")
+                else:
+                    st.info("No recent news available for this ticker")
 
         # Additional sections below the main columns
         st.markdown("---")
