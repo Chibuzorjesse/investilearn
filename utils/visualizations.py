@@ -623,7 +623,7 @@ def create_cashflow_sankey(data):
 
 
 def create_balance_sankey(data):
-    """Create dynamic Sankey diagram for balance sheet showing all line items"""
+    """Create Sankey diagram showing accounting equation: Assets = Liabilities + Equity"""
     try:
         # Extract all non-zero items from the balance sheet
         items = {k: abs(v) for k, v in data.items() if pd.notna(v) and v != 0}
@@ -651,11 +651,13 @@ def create_balance_sankey(data):
         if total_assets == 0:
             return create_empty_sankey()
 
-        # Build nodes and flows dynamically
+        # Build nodes and flows - GuruFocus style: Assets (left) = Liabs + Equity (right)
         nodes = []
         node_colors = []
         flows = []
         node_map = {}
+        node_x = []  # X positions
+        node_y = []  # Y positions
 
         # Color palette for balance sheet
         colors = {
@@ -673,22 +675,15 @@ def create_balance_sankey(data):
             "other": "#7209B7",  # Magenta
         }
 
-        # Add Total Assets root node
-        if total_assets_key:
-            nodes.append(total_assets_key)
-            node_colors.append(colors["total_assets"])
-            node_map[total_assets_key] = len(nodes) - 1
-
         # Track items we've already added
         excluded = {total_assets_key, current_assets_key, non_current_assets_key}
 
-        # Current Assets breakdown
-        if current_assets_key and current_assets > 0:
-            nodes.append(current_assets_key)
-            node_colors.append(colors["current_assets"])
-            node_map[current_assets_key] = len(nodes) - 1
-            flows.append((node_map[total_assets_key], node_map[current_assets_key], current_assets))
+        # LEFT SIDE: Asset Categories flowing INTO Total Assets
+        asset_y_start = 0.1
 
+        # Current Assets (LEFT - will flow right)
+        current_asset_components = []
+        if current_assets_key and current_assets > 0:
             # Pattern matching for current asset components
             current_asset_patterns = {
                 "Cash And Cash Equivalents": "cash",
@@ -707,25 +702,36 @@ def create_balance_sankey(data):
                 if pattern in items and pattern not in excluded:
                     value = items[pattern]
                     if value > 0 and value / total_assets > 0.03:  # >3% threshold
-                        nodes.append(pattern)
-                        node_colors.append(colors[color_type])
-                        node_map[pattern] = len(nodes) - 1
-                        flows.append((node_map[current_assets_key], node_map[pattern], value))
+                        current_asset_components.append((pattern, value, color_type))
                         excluded.add(pattern)
 
-        # Non-Current Assets breakdown
-        if non_current_assets_key and non_current_assets > 0:
-            nodes.append(non_current_assets_key)
-            node_colors.append(colors["non_current_assets"])
-            node_map[non_current_assets_key] = len(nodes) - 1
-            flows.append(
-                (
-                    node_map[total_assets_key],
-                    node_map[non_current_assets_key],
-                    non_current_assets,
-                )
-            )
+            # Add component nodes
+            y_pos = asset_y_start
+            for pattern, _, color_type in current_asset_components:
+                nodes.append(pattern)
+                node_colors.append(colors[color_type])
+                node_x.append(0.01)
+                node_y.append(y_pos)
+                node_map[pattern] = len(nodes) - 1
+                y_pos += 0.12
 
+            # Add Current Assets category node
+            nodes.append(current_assets_key)
+            node_colors.append(colors["current_assets"])
+            node_x.append(0.25)
+            node_y.append(asset_y_start + len(current_asset_components) * 0.06)
+            node_map[current_assets_key] = len(nodes) - 1
+
+            # Create flows from components to category
+            for pattern, value, _ in current_asset_components:
+                if pattern in node_map:
+                    flows.append((node_map[pattern], node_map[current_assets_key], value))
+
+            asset_y_start = y_pos + 0.05
+
+        # Non-Current Assets (LEFT - will flow right)
+        non_current_components = []
+        if non_current_assets_key and non_current_assets > 0:
             # Pattern matching for non-current asset components
             non_current_patterns = {
                 "Net PPE": "ppe",
@@ -745,14 +751,50 @@ def create_balance_sankey(data):
                 if pattern in items and pattern not in excluded:
                     value = items[pattern]
                     if value > 0 and value / total_assets > 0.03:  # >3% threshold
-                        nodes.append(pattern)
-                        node_colors.append(colors[color_type])
-                        node_map[pattern] = len(nodes) - 1
-                        flows.append((node_map[non_current_assets_key], node_map[pattern], value))
+                        non_current_components.append((pattern, value, color_type))
                         excluded.add(pattern)
 
-        # Calculate Total Liabilities (consolidation node)
-        total_liabilities = 0
+            # Add component nodes
+            y_pos = asset_y_start
+            for pattern, _, color_type in non_current_components:
+                nodes.append(pattern)
+                node_colors.append(colors[color_type])
+                node_x.append(0.01)
+                node_y.append(y_pos)
+                node_map[pattern] = len(nodes) - 1
+                y_pos += 0.12
+
+            # Add Non-Current Assets category node
+            nodes.append(non_current_assets_key)
+            node_colors.append(colors["non_current_assets"])
+            node_x.append(0.25)
+            node_y.append(asset_y_start + len(non_current_components) * 0.06)
+            node_map[non_current_assets_key] = len(nodes) - 1
+
+            # Create flows from components to category
+            for pattern, value, _ in non_current_components:
+                if pattern in node_map:
+                    flows.append((node_map[pattern], node_map[non_current_assets_key], value))
+
+        # CENTER: Total Assets (middle bar)
+        nodes.append(total_assets_key)
+        node_colors.append(colors["total_assets"])
+        node_x.append(0.5)
+        node_y.append(0.5)
+        total_assets_idx = len(nodes) - 1
+        node_map[total_assets_key] = total_assets_idx
+
+        # Flow from asset categories to Total Assets
+        if current_assets_key in node_map:
+            flows.append((node_map[current_assets_key], total_assets_idx, current_assets))
+
+        if non_current_assets_key in node_map:
+            flows.append((node_map[non_current_assets_key], total_assets_idx, non_current_assets))
+
+        # RIGHT SIDE: Total Assets flows to Liabilities + Equity
+        liability_y_start = 0.2
+
+        # Calculate Total Liabilities
         current_liabilities_val = 0
         non_current_liabilities_val = 0
 
@@ -778,42 +820,39 @@ def create_balance_sankey(data):
 
         total_liabilities = current_liabilities_val + non_current_liabilities_val
 
-        # Add Total Liabilities consolidation node
+        # Add Total Liabilities (RIGHT - receives from center)
         if total_liabilities > 0:
             nodes.append("Total Liabilities")
             node_colors.append(colors["current_liabilities"])
-            node_map["Total Liabilities"] = len(nodes) - 1
-            flows.append(
-                (node_map[total_assets_key], node_map["Total Liabilities"], total_liabilities)
-            )
+            node_x.append(0.75)
+            node_y.append(liability_y_start)
+            liab_idx = len(nodes) - 1
+            node_map["Total Liabilities"] = liab_idx
+            flows.append((total_assets_idx, liab_idx, total_liabilities))
 
-            # Add breakdown from Total Liabilities
+            # Breakdown flows from Total Liabilities
+            y_pos = liability_y_start
             if current_liabilities_val > 0:
                 nodes.append("Current Liabilities")
                 node_colors.append(colors["current_liabilities"])
+                node_x.append(0.99)
+                node_y.append(y_pos)
                 node_map["Current Liabilities"] = len(nodes) - 1
-                flows.append(
-                    (
-                        node_map["Total Liabilities"],
-                        node_map["Current Liabilities"],
-                        current_liabilities_val,
-                    )
-                )
+                flows.append((liab_idx, node_map["Current Liabilities"], current_liabilities_val))
+                y_pos += 0.15
 
             if non_current_liabilities_val > 0:
                 nodes.append("Long-Term Debt")
                 node_colors.append(colors["non_current_liabilities"])
+                node_x.append(0.99)
+                node_y.append(y_pos)
                 node_map["Long-Term Debt"] = len(nodes) - 1
-                flows.append(
-                    (
-                        node_map["Total Liabilities"],
-                        node_map["Long-Term Debt"],
-                        non_current_liabilities_val,
-                    )
-                )
+                flows.append((liab_idx, node_map["Long-Term Debt"], non_current_liabilities_val))
+                y_pos += 0.15
 
-        # Calculate Total Equity (consolidation node)
-        total_equity = 0
+            liability_y_start = y_pos + 0.1
+
+        # Calculate Total Equity
         stockholders_equity_val = 0
         retained_earnings_val = 0
         common_stock_val = 0
@@ -843,31 +882,34 @@ def create_balance_sankey(data):
         else:
             total_equity = retained_earnings_val + common_stock_val
 
-        # Add Total Equity consolidation node
+        # Add Total Equity (RIGHT - receives from center)
         if total_equity > 0:
             nodes.append("Total Equity")
             node_colors.append(colors["equity"])
-            node_map["Total Equity"] = len(nodes) - 1
-            flows.append((node_map[total_assets_key], node_map["Total Equity"], total_equity))
+            node_x.append(0.75)
+            node_y.append(liability_y_start)
+            equity_idx = len(nodes) - 1
+            node_map["Total Equity"] = equity_idx
+            flows.append((total_assets_idx, equity_idx, total_equity))
 
-            # Add breakdown from Total Equity if components are significant
+            # Breakdown flows from Total Equity
+            y_pos = liability_y_start
             if retained_earnings_val > 0 and abs(retained_earnings_val / total_equity) > 0.15:
                 nodes.append("Retained Earnings")
                 node_colors.append(colors["equity"])
+                node_x.append(0.99)
+                node_y.append(y_pos)
                 node_map["Retained Earnings"] = len(nodes) - 1
-                flows.append(
-                    (
-                        node_map["Total Equity"],
-                        node_map["Retained Earnings"],
-                        retained_earnings_val,
-                    )
-                )
+                flows.append((equity_idx, node_map["Retained Earnings"], retained_earnings_val))
+                y_pos += 0.15
 
             if common_stock_val > 0 and common_stock_val / total_equity > 0.15:
                 nodes.append("Common Stock")
                 node_colors.append(colors["equity"])
+                node_x.append(0.99)
+                node_y.append(y_pos)
                 node_map["Common Stock"] = len(nodes) - 1
-                flows.append((node_map["Total Equity"], node_map["Common Stock"], common_stock_val))
+                flows.append((equity_idx, node_map["Common Stock"], common_stock_val))
 
         if not flows:
             return create_empty_sankey()
@@ -881,28 +923,33 @@ def create_balance_sankey(data):
         fig = go.Figure(
             data=[
                 go.Sankey(
+                    arrangement="snap",  # Use snap positioning
                     node={
                         "pad": 15,
                         "thickness": 20,
                         "line": {"color": "white", "width": 1.5},
                         "label": nodes,
                         "color": node_colors,
+                        "x": node_x,
+                        "y": node_y,
                         "customdata": nodes,
-                        "hovertemplate": "%{customdata}<br>$%{value:,.0f}<extra></extra>",
+                        "hovertemplate": ("%{customdata}<br>$%{value:,.0f}<extra></extra>"),
                     },
                     link={
                         "source": [f[0] for f in flows],
                         "target": [f[1] for f in flows],
                         "value": [f[2] for f in flows],
                         "color": link_colors,
-                        "hovertemplate": "%{source.label} → %{target.label}<br>$%{value:,.0f}<extra></extra>",
+                        "hovertemplate": (
+                            "%{source.label} → %{target.label}<br>$%{value:,.0f}<extra></extra>"
+                        ),
                     },
                 )
             ]
         )
 
         fig.update_layout(
-            title="Balance Sheet Structure (Detailed)",
+            title="Balance Sheet: Assets = Liabilities + Equity",
             font={"size": 10},
             height=600,
             paper_bgcolor="rgba(0,0,0,0)",
@@ -910,22 +957,14 @@ def create_balance_sankey(data):
             annotations=[
                 {
                     "text": (
-                        "<b>Color Key:</b><br>"
-                        "<b>Assets:</b> "
-                        f"<span style='color:{colors['current_assets']}'>● Current</span> | "
-                        f"<span style='color:{colors['non_current_assets']}'>● Non-Current</span><br>"
-                        "<b>Liabilities:</b> "
-                        f"<span style='color:{colors['current_liabilities']}'>● Current</span> | "
-                        f"<span style='color:{colors['non_current_liabilities']}'>● Long-Term</span><br>"
-                        "<b>Equity:</b> "
-                        f"<span style='color:{colors['equity']}'>● Shareholders' Equity</span>"
+                        "<b>Accounting Equation:</b> Assets (left) = Liabilities + Equity (right)"
                     ),
                     "xref": "paper",
                     "yref": "paper",
                     "x": 0.5,
-                    "y": -0.08,
+                    "y": -0.05,
                     "showarrow": False,
-                    "font": {"size": 9},
+                    "font": {"size": 10},
                     "align": "center",
                 }
             ],
