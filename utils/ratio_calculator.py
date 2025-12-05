@@ -361,7 +361,7 @@ def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
 
 def get_industry_comparison(info, ratio_name):
     """
-    Get industry average for a ratio by analyzing peer companies
+    Get industry average for a ratio by analyzing peer companies using cached data
 
     Args:
         info: Stock info dictionary from yfinance
@@ -371,19 +371,16 @@ def get_industry_comparison(info, ratio_name):
         float or None: Industry average value if available
 
     Note:
-        This function filters peer companies by:
-        1. Same industry/sector
-        2. Similar market cap category (Large/Mid/Small)
-        3. Calculates average ratios from ~5-10 peers
+        This function uses an efficient cached approach:
+        1. Fetches all peer data once and caches in memory
+        2. Filters using pandas for instant results
+        3. Only makes API calls on first use per session
 
-        This is a free alternative to paid APIs, with limitations:
-        - Limited to major public companies (S&P 500 constituents)
-        - Slower (requires multiple API calls)
-        - Cached to avoid repeated API calls
+        Filters peers by:
+        - Same exact industry
+        - Similar market cap category (Large/Mid/Small)
+        - Valid financial data
     """
-    import time
-
-    import yfinance as yf
 
     # Get company details
     ticker = info.get("symbol")
@@ -394,117 +391,158 @@ def get_industry_comparison(info, ratio_name):
     if not all([ticker, industry, market_cap]):
         return None
 
-    # Determine market cap category
-    if market_cap > 10e9:
-        cap_category = "large"
-    elif market_cap > 2e9:
-        cap_category = "mid"
-    else:
-        cap_category = "small"
-
-    # Get peer candidates
-    peer_tickers = _get_peer_candidates(sector, cap_category)
-    if not peer_tickers:
+    # Get or build cached peer data
+    peer_data = _get_cached_peer_data(sector)
+    if peer_data is None or peer_data.empty:
         return None
 
-    # Calculate ratio for peers
-    peer_values = []
-    checked = 0
-    max_checks = 15  # Check up to 15 companies to find ~5-10 valid peers
+    # Determine market cap category
+    if market_cap > 10e9:
+        cap_min, cap_max = 10e9, float("inf")
+    elif market_cap > 2e9:
+        cap_min, cap_max = 2e9, 10e9
+    else:
+        cap_min, cap_max = 0, 2e9
 
-    for peer_ticker in peer_tickers:
-        if checked >= max_checks:
-            break
-        if peer_ticker.upper() == ticker.upper():
-            continue
+    # Filter peers using pandas (instant!)
+    peers = peer_data[
+        (peer_data["industry"] == industry)
+        & (peer_data["marketCap"] >= cap_min)
+        & (peer_data["marketCap"] < cap_max)
+        & (peer_data["ticker"] != ticker.upper())
+    ]
 
-        checked += 1
+    # Need at least 3 peers for valid comparison
+    if len(peers) < 3:
+        return None
 
-        try:
-            peer = yf.Ticker(peer_ticker)
-            peer_info = peer.info
+    # Get the ratio column based on ratio_name
+    ratio_col = _map_ratio_name_to_column(ratio_name)
+    if ratio_col not in peers.columns:
+        return None
 
-            # Filter by exact industry match
-            if peer_info.get("industry") != industry:
-                continue
-
-            # Filter by market cap category
-            peer_cap = peer_info.get("marketCap")
-            if not peer_cap:
-                continue
-
-            if cap_category == "large" and peer_cap <= 10e9:
-                continue
-            elif cap_category == "mid" and (peer_cap <= 2e9 or peer_cap > 10e9):
-                continue
-            elif cap_category == "small" and peer_cap >= 2e9:
-                continue
-
-            # Calculate the specific ratio for this peer
-            peer_value = _calculate_peer_ratio(peer, ratio_name)
-            if peer_value is not None:
-                peer_values.append(peer_value)
-
-            time.sleep(0.05)  # Small delay to avoid rate limiting
-
-        except (KeyError, ValueError, TypeError, AttributeError):
-            # Skip peers with missing/invalid data
-            continue
-
-    # Return average if we have at least 3 peers
+    # Calculate average, excluding NaN values
+    peer_values = peers[ratio_col].dropna()
     if len(peer_values) >= 3:
-        return sum(peer_values) / len(peer_values)
+        return peer_values.mean()
 
     return None
 
 
-def _calculate_peer_ratio(peer_ticker, ratio_name):
-    """Calculate a specific ratio for a peer company"""
-    try:
-        income = peer_ticker.financials
-        balance = peer_ticker.balance_sheet
+# Global cache for peer data (persists across function calls in same session)
+_PEER_DATA_CACHE: dict = {}
 
-        if income.empty or balance.empty:
-            return None
 
-        # Get most recent period
-        net_income = income.iloc[:, 0].get("Net Income")
-        revenue = income.iloc[:, 0].get("Total Revenue")
-        equity = balance.iloc[:, 0].get("Stockholders Equity")
-        total_assets = balance.iloc[:, 0].get("Total Assets")
-        current_assets = balance.iloc[:, 0].get("Current Assets")
-        current_liabilities = balance.iloc[:, 0].get("Current Liabilities")
+def _get_cached_peer_data(sector):
+    """
+    Get or build cached DataFrame of peer company data for a sector
 
-        # Calculate based on ratio name
-        if ratio_name == "Return on Equity (ROE)":
-            if net_income is not None and equity is not None and equity != 0:
-                return (net_income / equity) * 100
+    Args:
+        sector (str): Company sector
 
-        elif ratio_name == "Return on Assets (ROA)":
-            if net_income is not None and total_assets is not None and total_assets != 0:
-                return (net_income / total_assets) * 100
+    Returns:
+        pd.DataFrame: Cached peer data with columns:
+            - ticker, industry, sector, marketCap
+            - ROE, ROA, Net Profit Margin, Gross Profit Margin, Current Ratio
+    """
+    import time
 
-        elif ratio_name == "Net Profit Margin":
-            if net_income is not None and revenue is not None and revenue != 0:
-                return (net_income / revenue) * 100
+    import pandas as pd
+    import yfinance as yf
 
-        elif ratio_name == "Gross Profit Margin":
-            gross_profit = income.iloc[:, 0].get("Gross Profit")
-            if gross_profit is not None and revenue is not None and revenue != 0:
-                return (gross_profit / revenue) * 100
+    # Return cached data if available
+    if sector in _PEER_DATA_CACHE:
+        return _PEER_DATA_CACHE[sector]
 
-        elif ratio_name == "Current Ratio":
-            if (
-                current_assets is not None
-                and current_liabilities is not None
-                and current_liabilities != 0
-            ):
-                return current_assets / current_liabilities
-
+    # Get tickers for this sector
+    tickers = _get_peer_candidates(sector, None)
+    if not tickers:
         return None
 
-    except (KeyError, ValueError, TypeError, AttributeError, IndexError):
-        return None
+    # Fetch data for all tickers in batch
+    peer_records = []
+
+    for ticker in tickers:
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+
+            # Get basic company info
+            record = {
+                "ticker": ticker,
+                "industry": info.get("industry"),
+                "sector": info.get("sector"),
+                "marketCap": info.get("marketCap"),
+            }
+
+            # Skip if missing critical data
+            if not all([record["industry"], record["marketCap"]]):
+                continue
+
+            # Calculate ratios
+            income = stock.financials
+            balance = stock.balance_sheet
+
+            if not income.empty and not balance.empty:
+                # Get most recent period data
+                net_income = income.iloc[:, 0].get("Net Income")
+                revenue = income.iloc[:, 0].get("Total Revenue")
+                gross_profit = income.iloc[:, 0].get("Gross Profit")
+                equity = balance.iloc[:, 0].get("Stockholders Equity")
+                total_assets = balance.iloc[:, 0].get("Total Assets")
+                current_assets = balance.iloc[:, 0].get("Current Assets")
+                current_liabilities = balance.iloc[:, 0].get("Current Liabilities")
+
+                # Calculate ROE
+                if net_income is not None and equity is not None and equity != 0:
+                    record["ROE"] = (net_income / equity) * 100
+
+                # Calculate ROA
+                if net_income is not None and total_assets is not None and total_assets != 0:
+                    record["ROA"] = (net_income / total_assets) * 100
+
+                # Calculate Net Profit Margin
+                if net_income is not None and revenue is not None and revenue != 0:
+                    record["Net Profit Margin"] = (net_income / revenue) * 100
+
+                # Calculate Gross Profit Margin
+                if gross_profit is not None and revenue is not None and revenue != 0:
+                    record["Gross Profit Margin"] = (gross_profit / revenue) * 100
+
+                # Calculate Current Ratio
+                if (
+                    current_assets is not None
+                    and current_liabilities is not None
+                    and current_liabilities != 0
+                ):
+                    record["Current Ratio"] = current_assets / current_liabilities
+
+            peer_records.append(record)
+            time.sleep(0.1)  # Small delay between API calls
+
+        except (KeyError, ValueError, TypeError, AttributeError, IndexError):
+            # Skip tickers with errors
+            continue
+
+    # Create DataFrame
+    df = pd.DataFrame(peer_records)
+
+    # Cache the result
+    _PEER_DATA_CACHE[sector] = df
+
+    return df
+
+
+def _map_ratio_name_to_column(ratio_name):
+    """Map display ratio name to DataFrame column name"""
+    mapping = {
+        "Return on Equity (ROE)": "ROE",
+        "Return on Assets (ROA)": "ROA",
+        "Net Profit Margin": "Net Profit Margin",
+        "Gross Profit Margin": "Gross Profit Margin",
+        "Current Ratio": "Current Ratio",
+    }
+    return mapping.get(ratio_name)
 
 
 def _get_peer_candidates(sector, _cap_category):
