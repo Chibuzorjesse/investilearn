@@ -88,8 +88,14 @@ def render_landing_page() -> None:
         st.markdown("Make informed long-term investment decisions")
 
 
-def render_additional_resources() -> None:
-    """Render additional resources section"""
+def render_additional_resources(ticker: str | None = None, cik: str | None = None) -> None:
+    """
+    Render additional resources section with links
+
+    Args:
+        ticker: Stock ticker symbol (optional)
+        cik: SEC CIK number (optional)
+    """
     st.markdown("---")
     st.markdown("### 📚 Additional Resources")
 
@@ -97,21 +103,57 @@ def render_additional_resources() -> None:
 
     with col_res1:
         st.markdown("#### 📄 SEC Filings")
-        st.markdown("- 10-K Annual Report")
-        st.markdown("- 10-Q Quarterly Report")
-        st.markdown("- 8-K Current Report")
-        st.markdown("- Proxy Statements")
+        if ticker and cik:
+            # SEC EDGAR links
+            edgar_base = "https://www.sec.gov/cgi-bin/browse-edgar"
+            st.markdown(
+                f"- [10-K Annual Report]({edgar_base}" f"?action=getcompany&CIK={cik}&type=10-K)"
+            )
+            st.markdown(
+                f"- [10-Q Quarterly Report]({edgar_base}" f"?action=getcompany&CIK={cik}&type=10-Q)"
+            )
+            st.markdown(
+                f"- [8-K Current Report]({edgar_base}" f"?action=getcompany&CIK={cik}&type=8-K)"
+            )
+            st.markdown(
+                f"- [Proxy Statements]({edgar_base}" f"?action=getcompany&CIK={cik}&type=DEF+14A)"
+            )
+            st.markdown(
+                f"- [All Filings]({edgar_base}" f"?action=getcompany&CIK={cik}&owner=exclude)"
+            )
+        else:
+            st.caption("Search for a company to see SEC filing links")
 
     with col_res2:
         st.markdown("#### 📊 Historical Performance")
-        st.markdown("- 5-Year Stock Chart")
-        st.markdown("- Dividend History")
-        st.markdown("- Earnings History")
-        st.markdown("- Share Buyback Activity")
+        if ticker:
+            # Yahoo Finance links
+            yf_base = f"https://finance.yahoo.com/quote/{ticker}"
+            st.markdown(f"- [Stock Chart]({yf_base}/chart)")
+            st.markdown(f"- [Historical Data]({yf_base}/history)")
+            st.markdown(f"- [Financials]({yf_base}/financials)")
+            st.markdown(f"- [Analysis]({yf_base}/analysis)")
+        else:
+            st.caption("Search for a company to see performance links")
 
     with col_res3:
         st.markdown("#### 🎓 Learn More")
-        st.markdown("- What is Fundamental Analysis?")
-        st.markdown("- Understanding Financial Ratios")
-        st.markdown("- Long-term Investment Strategies")
-        st.markdown("- Reading Financial Statements")
+        st.markdown(
+            "- [What is Fundamental Analysis?]"
+            "(https://www.investopedia.com/terms/f/"
+            "fundamentalanalysis.asp)"
+        )
+        st.markdown(
+            "- [Understanding Financial Ratios]"
+            "(https://www.investopedia.com/financial-ratios-4689817)"
+        )
+        st.markdown(
+            "- [Long-term Investing]"
+            "(https://www.investopedia.com/terms/l/"
+            "longterminvestments.asp)"
+        )
+        st.markdown(
+            "- [Reading Financial Statements]"
+            "(https://www.sec.gov/oiea/investor-alerts-and-bulletins/"
+            "how-read-financial-statement)"
+        )

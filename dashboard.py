@@ -56,26 +56,37 @@ if "first_visit" not in st.session_state:
 render_sidebar()
 
 # Main header
-st.title("📊 Fundamental Investment Dashboard")
+st.title("📊 InvestiLearn")
 st.markdown(
     """
-Welcome to your long-term investment research tool. Search for companies to analyze their
-financial health, key ratios, and stay updated with relevant news.
-"""
-)
-
-# AI Features disclosure (HAX Guideline G1)
-st.info(
+    **AI-powered fundamental analysis for long-term investors** · Educational tool, not investment advice
     """
-🤖 **AI-Powered Features:**
-- **Smart News Curation:** AI ranks articles by relevance, recency, and credibility
-- **Interactive Learning Guide:** Click ❓ buttons to learn about any metric
-- **Full Transparency:** See exactly why each recommendation is made
-
-⚠️ **Important:** This tool provides educational information only. Not investment advice.
-Always conduct your own due diligence and consult with a licensed financial advisor.
-"""
 )
+
+# AI Features (HAX Guideline G1 - Make clear what system can do)
+col_ai1, col_ai2 = st.columns([2, 1])
+
+with col_ai1:
+    st.markdown(
+        """
+        ### 🤖 How AI Assists You
+        - **Smart News Ranking:** AI scores articles by relevance, source credibility, and recency
+        - **Transparent Recommendations:** Click any article to see exactly why it was ranked
+        - **Interactive Learning:** Click ❓ next to any metric for instant explanations
+        """
+    )
+
+with col_ai2:
+    st.info(
+        """
+        **AI doesn't:**
+        - Make investment decisions
+        - Predict stock prices
+        - Provide financial advice
+
+        Always verify with official sources.
+        """
+    )
 
 # Search bar
 st.markdown("---")
@@ -146,7 +157,8 @@ if search_query:
             render_news_section(search_query, company_name)
 
         # Additional resources below the main columns
-        render_additional_resources()
+        ticker_symbol = info.get("symbol", search_query)
+        render_additional_resources(ticker=ticker_symbol, cik=ticker_symbol)
 
     else:
         # If no stock found, show error message
