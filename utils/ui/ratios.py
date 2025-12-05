@@ -4,7 +4,12 @@ from datetime import datetime
 
 import streamlit as st
 
-from utils.ratio_calculator import format_ratio_value, get_ratio_metrics
+from utils.ratio_calculator import (
+    calculate_5yr_average,
+    format_ratio_value,
+    get_industry_comparison,
+    get_ratio_metrics,
+)
 
 
 def log_feedback(feedback_type: str, context: dict, sentiment: str = "neutral") -> None:
@@ -22,7 +27,7 @@ def log_feedback(feedback_type: str, context: dict, sentiment: str = "neutral") 
         st.session_state.feedback_count += 1
 
 
-def render_ratios_section(ratios: dict, company_name: str, search_query: str) -> None:
+def render_ratios_section(ratios: dict, company_name: str, search_query: str, info: dict) -> None:
     """
     Render financial ratios section with AI guide
 
@@ -30,6 +35,7 @@ def render_ratios_section(ratios: dict, company_name: str, search_query: str) ->
         ratios: Dictionary of calculated ratios
         company_name: Company name
         search_query: Search query string
+        info: Stock info dictionary for comparison data
     """
     st.markdown("### 📐 Key Financial Ratios")
     st.markdown("*Compare company performance to industry trends*")
@@ -44,20 +50,46 @@ def render_ratios_section(ratios: dict, company_name: str, search_query: str) ->
     st.markdown(f"#### {ratio_category} Ratios")
     st.info(info_text)
 
-    for ratio_key, ratio_display in metrics_list:
+    # Calculate comparison data
+    five_yr_avg = calculate_5yr_average(info)
+
+    # Filter out metrics that have no data (N/A)
+    available_metrics = [
+        (ratio_key, ratio_display)
+        for ratio_key, ratio_display in metrics_list
+        if ratios.get(ratio_key) is not None
+    ]
+
+    if not available_metrics:
+        st.warning(
+            f"⚠️ No {ratio_category.lower()} ratio data currently available for {company_name}. "
+            "This may be due to missing financial statement data or recent IPO."
+        )
+        return
+
+    for ratio_key, ratio_display in available_metrics:
         value = ratios.get(ratio_key)
         formatted_value = format_ratio_value(value, ratio_key)
 
+        # Get comparison values
+        industry_avg = get_industry_comparison(info, ratio_key)
+        yr5_avg = five_yr_avg.get(ratio_key)
+
         col_m1, col_m2, col_m3, col_m4 = st.columns([3, 2, 2, 1])
         with col_m1:
-            if value is not None:
-                st.metric(ratio_display, formatted_value)
-            else:
-                st.metric(ratio_display, "N/A")
+            st.metric(ratio_display, formatted_value)
         with col_m2:
-            st.caption("vs Industry: N/A")
+            if industry_avg is not None:
+                ind_formatted = format_ratio_value(industry_avg, ratio_key)
+                st.caption(f"vs Industry: {ind_formatted}")
+            else:
+                st.caption("vs Industry: Coming soon")
         with col_m3:
-            st.caption("vs 5Y Avg: N/A")
+            if yr5_avg is not None:
+                avg_formatted = format_ratio_value(yr5_avg, ratio_key)
+                st.caption(f"vs 5Y Avg: {avg_formatted}")
+            else:
+                st.caption("vs 5Y Avg: Coming soon")
         with col_m4:
             help_key = f"help_{ratio_key}_{search_query}"
             if st.button("❓", key=help_key, help="Ask guide about this"):

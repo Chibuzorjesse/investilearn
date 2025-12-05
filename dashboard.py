@@ -155,7 +155,7 @@ if search_query:
             render_financial_statements(income_stmt, balance_sheet, cash_flow)
 
         with tab2:
-            render_ratios_section(ratios, company_name, search_query)
+            render_ratios_section(ratios, company_name, search_query, info)
 
         with tab3:
             render_news_section(search_query, company_name)

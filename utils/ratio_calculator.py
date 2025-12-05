@@ -71,6 +71,87 @@ def calculate_ratios(info, income_stmt=None, balance_sheet=None):
         else:
             ratios["Debt Ratio"] = None
 
+        # Efficiency ratios
+        # Asset Turnover = Revenue / Average Total Assets
+        if (
+            income_stmt is not None
+            and not income_stmt.empty
+            and balance_sheet is not None
+            and not balance_sheet.empty
+        ):
+            try:
+                revenue = income_stmt.iloc[:, 0].get("Total Revenue", None)
+                current_assets = balance_sheet.iloc[:, 0].get("Total Assets", None)
+
+                # Try to get previous period for average calculation
+                if len(balance_sheet.columns) > 1:
+                    prev_assets = balance_sheet.iloc[:, 1].get("Total Assets", None)
+                    if current_assets is not None and prev_assets is not None:
+                        avg_assets = (current_assets + prev_assets) / 2
+                    else:
+                        avg_assets = current_assets
+                else:
+                    avg_assets = current_assets
+
+                if revenue is not None and avg_assets is not None and avg_assets != 0:
+                    ratios["Asset Turnover"] = revenue / avg_assets
+                else:
+                    ratios["Asset Turnover"] = None
+            except (KeyError, IndexError, TypeError):
+                ratios["Asset Turnover"] = None
+        else:
+            ratios["Asset Turnover"] = None
+
+        # Inventory Turnover = COGS / Average Inventory
+        if (
+            income_stmt is not None
+            and not income_stmt.empty
+            and balance_sheet is not None
+            and not balance_sheet.empty
+        ):
+            try:
+                cogs = income_stmt.iloc[:, 0].get("Cost Of Revenue", None)
+                current_inventory = balance_sheet.iloc[:, 0].get("Inventory", None)
+
+                # Try to get previous period for average calculation
+                if len(balance_sheet.columns) > 1:
+                    prev_inventory = balance_sheet.iloc[:, 1].get("Inventory", None)
+                    if current_inventory is not None and prev_inventory is not None:
+                        avg_inventory = (current_inventory + prev_inventory) / 2
+                    else:
+                        avg_inventory = current_inventory
+                else:
+                    avg_inventory = current_inventory
+
+                if cogs is not None and avg_inventory is not None and avg_inventory != 0:
+                    ratios["Inventory Turnover"] = cogs / avg_inventory
+                else:
+                    ratios["Inventory Turnover"] = None
+            except (KeyError, IndexError, TypeError):
+                ratios["Inventory Turnover"] = None
+        else:
+            ratios["Inventory Turnover"] = None
+
+        # Days Sales Outstanding = (Accounts Receivable / Revenue) * 365
+        if (
+            income_stmt is not None
+            and not income_stmt.empty
+            and balance_sheet is not None
+            and not balance_sheet.empty
+        ):
+            try:
+                revenue = income_stmt.iloc[:, 0].get("Total Revenue", None)
+                accounts_receivable = balance_sheet.iloc[:, 0].get("Accounts Receivable", None)
+
+                if revenue is not None and accounts_receivable is not None and revenue != 0:
+                    ratios["Days Sales Outstanding"] = (accounts_receivable / revenue) * 365
+                else:
+                    ratios["Days Sales Outstanding"] = None
+            except (KeyError, IndexError, TypeError):
+                ratios["Days Sales Outstanding"] = None
+        else:
+            ratios["Days Sales Outstanding"] = None
+
         # Valuation ratios
         ratios["P/E Ratio"] = info.get("trailingPE", None)
         ratios["P/B Ratio"] = info.get("priceToBook", None)
@@ -141,6 +222,68 @@ def get_ratio_metrics(ratio_category):
     return config["info"], config["metrics"]
 
 
+def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
+    """
+    Calculate 5-year average for key ratios
+
+    Args:
+        info: Stock info dictionary from yfinance
+        income_stmts: Historical income statements (optional)
+        balance_sheets: Historical balance sheets (optional)
+
+    Returns:
+        dict: Dictionary of 5-year average ratios
+    """
+    averages: dict[str, float | None] = {}
+
+    # For now, we can't calculate true historical averages without
+    # multiple years of ratio data. yfinance provides trailing metrics.
+    # Return None for all to indicate data not yet available
+
+    ratio_keys = [
+        "ROE",
+        "ROA",
+        "Net Profit Margin",
+        "Gross Profit Margin",
+        "Current Ratio",
+        "Quick Ratio",
+        "Asset Turnover",
+        "Inventory Turnover",
+        "Days Sales Outstanding",
+        "Debt to Equity",
+        "Interest Coverage",
+        "Debt Ratio",
+        "P/E Ratio",
+        "P/B Ratio",
+        "PEG Ratio",
+        "Price to Sales",
+    ]
+
+    for key in ratio_keys:
+        averages[key] = None
+
+    return averages
+
+
+def get_industry_comparison(info, ratio_name):
+    """
+    Get industry average for a ratio if available
+
+    Args:
+        info: Stock info dictionary from yfinance
+        ratio_name: Name of the ratio to compare
+
+    Returns:
+        float or None: Industry average value if available
+    """
+    # yfinance doesn't provide direct industry averages in the info dict
+    # This would require additional API calls or data sources
+    # Returning None for now - can be enhanced later with services like
+    # Financial Modeling Prep, Alpha Vantage, or SEC XBRL data
+
+    return None
+
+
 def format_ratio_value(value, ratio_name):
     """
     Format a ratio value for display
@@ -158,6 +301,14 @@ def format_ratio_value(value, ratio_name):
     # Percentage ratios
     if any(term in ratio_name for term in ["ROE", "ROA", "Margin"]):
         return f"{value:.2f}%"
+
+    # Days ratios
+    if "Days" in ratio_name:
+        return f"{value:.1f} days"
+
+    # Turnover ratios
+    if "Turnover" in ratio_name:
+        return f"{value:.2f}x"
 
     # Regular ratios
     return f"{value:.2f}"
