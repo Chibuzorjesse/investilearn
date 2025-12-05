@@ -44,9 +44,22 @@ def calculate_ratios(info, income_stmt=None, balance_sheet=None):
                 # Get most recent column (latest financial data)
                 latest_data = income_stmt.iloc[:, 0]
                 ebit = latest_data.get("EBIT", None)
-                interest_expense = latest_data.get("Interest Expense", None)
 
-                if ebit is not None and interest_expense is not None and interest_expense != 0:
+                # Try multiple interest expense fields
+                interest_expense = (
+                    latest_data.get("Interest Expense", None)
+                    or latest_data.get("Interest Expense Non Operating", None)
+                    or latest_data.get("Net Non Operating Interest Income Expense", None)
+                )
+
+                if (
+                    ebit is not None
+                    and interest_expense is not None
+                    and not (
+                        isinstance(interest_expense, float) and interest_expense != interest_expense
+                    )  # Check for NaN
+                    and abs(interest_expense) > 0
+                ):
                     ratios["Interest Coverage"] = ebit / abs(interest_expense)
                 else:
                     ratios["Interest Coverage"] = None
@@ -224,43 +237,116 @@ def get_ratio_metrics(ratio_category):
 
 def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
     """
-    Calculate 5-year average for key ratios
+    Calculate 5-year average for key ratios from historical data
 
     Args:
         info: Stock info dictionary from yfinance
-        income_stmts: Historical income statements (optional)
-        balance_sheets: Historical balance sheets (optional)
+        income_stmts: Historical income statements DataFrame (optional)
+        balance_sheets: Historical balance sheets DataFrame (optional)
 
     Returns:
         dict: Dictionary of 5-year average ratios
     """
     averages: dict[str, float | None] = {}
 
-    # For now, we can't calculate true historical averages without
-    # multiple years of ratio data. yfinance provides trailing metrics.
-    # Return None for all to indicate data not yet available
+    # If we don't have historical data, return None for all
+    if income_stmts is None or balance_sheets is None:
+        ratio_keys = [
+            "ROE",
+            "ROA",
+            "Net Profit Margin",
+            "Gross Profit Margin",
+            "Current Ratio",
+            "Quick Ratio",
+            "Asset Turnover",
+            "Inventory Turnover",
+            "Days Sales Outstanding",
+            "Debt to Equity",
+            "Interest Coverage",
+            "Debt Ratio",
+            "P/E Ratio",
+            "P/B Ratio",
+            "PEG Ratio",
+            "Price to Sales",
+        ]
+        for key in ratio_keys:
+            averages[key] = None
+        return averages
 
-    ratio_keys = [
-        "ROE",
-        "ROA",
-        "Net Profit Margin",
-        "Gross Profit Margin",
-        "Current Ratio",
-        "Quick Ratio",
-        "Asset Turnover",
-        "Inventory Turnover",
-        "Days Sales Outstanding",
-        "Debt to Equity",
-        "Interest Coverage",
-        "Debt Ratio",
-        "P/E Ratio",
-        "P/B Ratio",
-        "PEG Ratio",
-        "Price to Sales",
-    ]
+    try:
+        # Calculate ratios for each historical period
+        historical_ratios = []
+        num_periods = min(len(income_stmts.columns), len(balance_sheets.columns))
 
-    for key in ratio_keys:
-        averages[key] = None
+        for i in range(num_periods):
+            period_ratios = {}
+            income_data = income_stmts.iloc[:, i]
+            balance_data = balance_sheets.iloc[:, i]
+
+            # Profitability ratios
+            net_income = income_data.get("Net Income", None)
+            total_revenue = income_data.get("Total Revenue", None)
+            gross_profit = income_data.get("Gross Profit", None)
+            total_assets = balance_data.get("Total Assets", None)
+            stockholder_equity = balance_data.get("Stockholders Equity", None)
+
+            if net_income and stockholder_equity and stockholder_equity != 0:
+                period_ratios["ROE"] = (net_income / stockholder_equity) * 100
+
+            if net_income and total_assets and total_assets != 0:
+                period_ratios["ROA"] = (net_income / total_assets) * 100
+
+            if net_income and total_revenue and total_revenue != 0:
+                period_ratios["Net Profit Margin"] = (net_income / total_revenue) * 100
+
+            if gross_profit and total_revenue and total_revenue != 0:
+                period_ratios["Gross Profit Margin"] = (gross_profit / total_revenue) * 100
+
+            # Liquidity ratios
+            current_assets = balance_data.get("Current Assets", None)
+            current_liabilities = balance_data.get("Current Liabilities", None)
+
+            if current_assets and current_liabilities and current_liabilities != 0:
+                period_ratios["Current Ratio"] = current_assets / current_liabilities
+
+            historical_ratios.append(period_ratios)
+
+        # Calculate averages
+        all_ratio_keys = [
+            "ROE",
+            "ROA",
+            "Net Profit Margin",
+            "Gross Profit Margin",
+            "Current Ratio",
+            "Quick Ratio",
+        ]
+
+        for key in all_ratio_keys:
+            values = [r[key] for r in historical_ratios if key in r and r[key] is not None]
+            if values:
+                averages[key] = sum(values) / len(values)
+            else:
+                averages[key] = None
+
+        # Ratios we can't easily calculate 5yr avg for (need more data)
+        for key in [
+            "Asset Turnover",
+            "Inventory Turnover",
+            "Days Sales Outstanding",
+            "Debt to Equity",
+            "Interest Coverage",
+            "Debt Ratio",
+            "P/E Ratio",
+            "P/B Ratio",
+            "PEG Ratio",
+            "Price to Sales",
+        ]:
+            averages[key] = None
+
+    except Exception:
+        # If anything goes wrong, return None for all
+        for key in all_ratio_keys:
+            averages[key] = None
 
     return averages
 
@@ -275,12 +361,19 @@ def get_industry_comparison(info, ratio_name):
 
     Returns:
         float or None: Industry average value if available
-    """
-    # yfinance doesn't provide direct industry averages in the info dict
-    # This would require additional API calls or data sources
-    # Returning None for now - can be enhanced later with services like
-    # Financial Modeling Prep, Alpha Vantage, or SEC XBRL data
 
+    Note:
+        yfinance doesn't provide industry averages directly.
+        This would require additional paid APIs like:
+        - Financial Modeling Prep (financialmodelingprep.com)
+        - Alpha Vantage (alphavantage.co)
+        - Intrinio (intrinio.com)
+        - SEC XBRL data aggregation
+
+        For now, returns None. Users can manually compare using
+        the industry/sector info displayed in the company header.
+    """
+    # Return None - industry comparisons need external data source
     return None
 
 

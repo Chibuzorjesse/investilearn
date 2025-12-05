@@ -27,7 +27,14 @@ def log_feedback(feedback_type: str, context: dict, sentiment: str = "neutral") 
         st.session_state.feedback_count += 1
 
 
-def render_ratios_section(ratios: dict, company_name: str, search_query: str, info: dict) -> None:
+def render_ratios_section(
+    ratios: dict,
+    company_name: str,
+    search_query: str,
+    info: dict,
+    income_stmt=None,
+    balance_sheet=None,
+) -> None:
     """
     Render financial ratios section with AI guide
 
@@ -36,6 +43,8 @@ def render_ratios_section(ratios: dict, company_name: str, search_query: str, in
         company_name: Company name
         search_query: Search query string
         info: Stock info dictionary for comparison data
+        income_stmt: Income statement DataFrame for 5yr averages
+        balance_sheet: Balance sheet DataFrame for 5yr averages
     """
     st.markdown("### 📐 Key Financial Ratios")
     st.markdown("*Compare company performance to industry trends*")
@@ -51,7 +60,7 @@ def render_ratios_section(ratios: dict, company_name: str, search_query: str, in
     st.info(info_text)
 
     # Calculate comparison data
-    five_yr_avg = calculate_5yr_average(info)
+    five_yr_avg = calculate_5yr_average(info, income_stmt, balance_sheet)
 
     # Filter out metrics that have no data (N/A)
     available_metrics = [
