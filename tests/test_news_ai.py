@@ -114,12 +114,15 @@ class TestNewsRecommender:
             "providerPublishTime": int(datetime.now().timestamp()),
         }
 
-        score, explanation = recommender._score_article(article, "AAPL", "Apple Inc.", None)
+        score, explanation, ml_details = recommender._score_article(
+            article, "AAPL", "Apple Inc.", None
+        )
 
         assert score > 0.5  # Should have high score
         assert "title" in explanation
         # Check that it detected the match (either direct mention or in summary)
         assert "Directly mentions" in explanation["title"] or "References" in explanation["title"]
+        assert isinstance(ml_details, dict)  # Should return ml_details dict
 
     def test_calculate_content_relevance(self):
         """Test content relevance calculation"""
@@ -206,17 +209,22 @@ class TestNewsRecommender:
             "publisher": "Reuters",
             "summary": "Detailed summary of the news article",
         }
-        confidence_high = recommender._calculate_confidence(0.8, article_high)
+        ml_details_high = {"semantic_similarity": {"score": 0.8}, "sentiment": {"confidence": 0.9}}
+        confidence_high = recommender._calculate_confidence(0.8, article_high, ml_details_high)
         assert confidence_high == "high"
 
         # Low confidence: low score
         article_low = {"publisher": "Unknown", "summary": ""}
-        confidence_low = recommender._calculate_confidence(0.3, article_low)
+        ml_details_low: dict[str, dict[str, float]] = {}
+        confidence_low = recommender._calculate_confidence(0.3, article_low, ml_details_low)
         assert confidence_low == "low"
 
         # Medium confidence
         article_medium = {"publisher": "MarketWatch", "summary": "Some summary"}
-        confidence_medium = recommender._calculate_confidence(0.6, article_medium)
+        ml_details_medium = {"semantic_similarity": {"score": 0.6}}
+        confidence_medium = recommender._calculate_confidence(
+            0.6, article_medium, ml_details_medium
+        )
         assert confidence_medium == "medium"
 
     def test_filter_by_category_all_news(self, sample_news_items):
