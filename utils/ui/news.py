@@ -163,21 +163,81 @@ def _render_news_items(display_items: list) -> None:
             st.caption(f"{publisher} • {date_str}")
 
             if st.session_state.get("ai_enabled", True):
-                st.caption(f"Relevance Score: {ai_score:.0%} | Confidence: {ai_confidence.title()}")
+                st.caption(
+                    f"Relevance Score: {ai_score:.0%} | " f"Confidence: {ai_confidence.title()}"
+                )
 
             st.markdown(f"[Read more →]({link})")
 
             with st.expander("🔍 Why is this recommended?", expanded=False):
                 if st.session_state.get("ai_enabled", True):
                     st.markdown("**AI Explanation:**")
+
+                    # Show ML model outputs directly if available
+                    ml_details = item.get("ml_details", {})
+                    use_ml = st.session_state.get("use_ml_ranking", True)
+
+                    if use_ml and ml_details:
+                        st.markdown("### 🧠 ML Model Outputs")
+
+                        # Semantic Similarity Score
+                        if "semantic_similarity" in ml_details:
+                            sem = ml_details["semantic_similarity"]
+                            st.markdown(
+                                f"**📊 Semantic Similarity:** "
+                                f"{sem['percentage']} ({sem['interpretation']})"
+                            )
+                            st.progress(sem["score"])
+
+                        # Sentiment Analysis
+                        if "sentiment" in ml_details:
+                            sent = ml_details["sentiment"]
+                            sentiment_emoji = {"positive": "📈", "negative": "📉", "neutral": "➖"}
+                            emoji = sentiment_emoji.get(sent["label"], "❓")
+                            st.markdown(
+                                f"**{emoji} FinBERT Sentiment:** "
+                                f"{sent['label'].title()} "
+                                f"({sent['percentage']} confidence)"
+                            )
+                            st.progress(sent["confidence"])
+                            st.caption(sent["interpretation"])
+
+                        st.markdown("---")
+                        st.markdown("### 📋 Scoring Breakdown")
+
+                        # Score breakdown table
+                        if "score_breakdown" in ml_details:
+                            breakdown = ml_details["score_breakdown"]
+                            for factor, details in breakdown.items():
+                                factor_name = factor.replace("_", " ").title()
+                                raw = details["raw_score"]
+                                weight = details["weight"]
+                                contribution = details["contribution"]
+                                st.markdown(
+                                    f"- **{factor_name}:** {raw:.1%} × "
+                                    f"{weight:.0%} = {contribution:.1%}"
+                                )
+
+                        st.markdown("---")
+
+                    st.markdown("**Other Factors:**")
                     for factor, explanation in ai_explanation.items():
                         st.markdown(f"- **{factor.title()}**: {explanation}")
+
                     st.markdown("---")
-                    st.caption(f"Overall relevance: {ai_score:.0%} | Confidence: {ai_confidence}")
                     st.caption(
-                        "💡 AI considers: topic relevance, recency, "
-                        "source credibility, and sentiment balance"
+                        f"Overall relevance: {ai_score:.0%} | " f"Confidence: {ai_confidence}"
                     )
+
+                    if use_ml:
+                        st.caption(
+                            "🧠 ML models: Sentence embeddings (semantic) + " "FinBERT (sentiment)"
+                        )
+                    else:
+                        st.caption(
+                            "💡 AI considers: topic relevance, recency, "
+                            "source credibility, and sentiment balance"
+                        )
 
                     # Feedback buttons
                     st.markdown("**Was this explanation helpful?**")

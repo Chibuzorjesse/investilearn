@@ -6,8 +6,6 @@ from typing import Any
 
 try:
     import numpy as np
-    from sentence_transformers import SentenceTransformer
-    from transformers import pipeline
 
     HF_AVAILABLE = True
 except ImportError:
@@ -32,32 +30,41 @@ class NewsRecommender:
         """
         self.use_ml = use_ml and HF_AVAILABLE
 
-        # Initialize ML models if available
+        # Try to get pre-loaded models from cache
         self.embedding_model = None
         self.sentiment_analyzer = None
 
         if self.use_ml:
             try:
-                logger.info("Loading ML models for news analysis...")
-                # Lightweight sentence transformer for semantic similarity
-                self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-                # Financial sentiment analysis
-                self.sentiment_analyzer = pipeline(
-                    "sentiment-analysis",
-                    model="ProsusAI/finbert",
-                    device=-1,  # CPU
+                # Import model loader
+                from utils.model_loader import (
+                    get_embedding_model,
+                    get_sentiment_model,
                 )
-                logger.info("ML models loaded successfully")
+
+                # Try to get cached models first
+                self.embedding_model = get_embedding_model()
+                self.sentiment_analyzer = get_sentiment_model()
+
+                # If models exist, we're good
+                if self.embedding_model and self.sentiment_analyzer:
+                    logger.info("Using pre-loaded ML models from cache")
+                else:
+                    logger.info("ML models not in cache, will load on demand")
+
             except Exception as e:
-                logger.warning(f"Failed to load ML models: {e}")
+                logger.warning("Failed to access ML models: %s", str(e))
                 self.use_ml = False
 
+        # When ML is enabled, prioritize ML signals heavily
         self.relevance_weights = {
-            "title_match": 0.25 if self.use_ml else 0.3,
-            "content_relevance": 0.20 if self.use_ml else 0.25,
-            "semantic_similarity": 0.20 if self.use_ml else 0.0,
-            "ml_sentiment": 0.15 if self.use_ml else 0.0,
-            "recency": 0.15 if self.use_ml else 0.2,
+            "title_match": 0.15 if self.use_ml else 0.3,
+            "content_relevance": 0.15 if self.use_ml else 0.25,
+            # Increased for better relevance
+            "semantic_similarity": 0.35 if self.use_ml else 0.0,
+            # Increased to prioritize sentiment
+            "ml_sentiment": 0.20 if self.use_ml else 0.0,
+            "recency": 0.10 if self.use_ml else 0.2,
             "source_credibility": 0.05 if self.use_ml else 0.15,
         }
 
@@ -103,10 +110,14 @@ class NewsRecommender:
 
         for item in news_items:
             try:
-                score, explanation = self._score_article(item, ticker, company_name, user_context)
+                score, explanation, ml_details = self._score_article(
+                    item, ticker, company_name, user_context
+                )
                 item["ai_score"] = score
                 item["ai_explanation"] = explanation
                 item["ai_confidence"] = self._calculate_confidence(score, item)
+                # Store raw ML scores for display
+                item["ml_details"] = ml_details
                 scored_items.append(item)
             except Exception as e:
                 logger.warning(f"Error scoring article: {e}")
@@ -123,21 +134,22 @@ class NewsRecommender:
         ticker: str,
         company_name: str,
         user_context: dict[str, Any] | None,
-    ) -> tuple[float, dict[str, str]]:
+    ) -> tuple[float, dict[str, str], dict[str, Any]]:
         """
         Score a single article based on multiple factors
 
         Returns:
-            tuple: (score, explanation_dict)
+            tuple: (score, explanation_dict, ml_details_dict)
         """
         title = article.get("title", "").lower()
         summary = article.get("summary", "").lower()
         publisher = article.get("publisher", "")
         published_time = article.get("providerPublishTime", 0)
 
-        # Initialize scores
+        # Initialize scores and ML details
         scores = {}
         explanations = {}
+        ml_details = {}  # Store raw ML model outputs
 
         # 1. Title and content relevance
         ticker_lower = ticker.lower()
@@ -178,12 +190,28 @@ class NewsRecommender:
             )
             scores["semantic_similarity"] = semantic_score
             explanations["semantic"] = self._get_semantic_explanation(semantic_score)
+            ml_details["semantic_similarity"] = {
+                "score": semantic_score,
+                "percentage": f"{semantic_score:.1%}",
+                "interpretation": self._get_semantic_explanation(semantic_score),
+            }
 
         # 4. ML-based sentiment analysis (if available)
         if self.use_ml:
-            ml_sentiment_score = self._calculate_ml_sentiment(title, summary)
+            (
+                ml_sentiment_score,
+                sentiment_label,
+                sentiment_confidence,
+            ) = self._calculate_ml_sentiment(title, summary)
             scores["ml_sentiment"] = ml_sentiment_score
             explanations["ml_sentiment"] = self._get_ml_sentiment_explanation(ml_sentiment_score)
+            ml_details["sentiment"] = {
+                "label": sentiment_label,
+                "confidence": sentiment_confidence,
+                "percentage": f"{sentiment_confidence:.1%}",
+                "score": ml_sentiment_score,
+                "interpretation": self._get_ml_sentiment_explanation(ml_sentiment_score),
+            }
 
         # 5. Recency score
         recency_score = self._calculate_recency_score(published_time)
@@ -200,7 +228,19 @@ class NewsRecommender:
             scores[key] * self.relevance_weights.get(key, 0.0) for key in scores.keys()
         )
 
-        return total_score, explanations
+        # Add score breakdown to ml_details
+        if self.use_ml:
+            ml_details["score_breakdown"] = {
+                factor: {
+                    "raw_score": scores.get(factor, 0),
+                    "weight": self.relevance_weights.get(factor, 0),
+                    "contribution": (scores.get(factor, 0) * self.relevance_weights.get(factor, 0)),
+                }
+                for factor in self.relevance_weights.keys()
+                if factor in scores
+            }
+
+        return total_score, explanations, ml_details
 
     def _calculate_semantic_similarity(
         self, ticker: str, company_name: str, title: str, summary: str
@@ -243,14 +283,14 @@ class NewsRecommender:
         else:
             return "Low semantic relevance (general market news)"
 
-    def _calculate_ml_sentiment(self, title: str, summary: str) -> float:
+    def _calculate_ml_sentiment(self, title: str, summary: str) -> tuple[float, str, float]:
         """
         Use FinBERT to analyze financial sentiment
 
-        Returns score: positive sentiment = higher, neutral = medium
+        Returns: (score, label, confidence)
         """
         if not self.use_ml or self.sentiment_analyzer is None:
-            return 0.5
+            return 0.5, "neutral", 0.0
 
         try:
             text = f"{title}. {summary}"[:512]  # Truncate to model limit
@@ -262,16 +302,18 @@ class NewsRecommender:
             # Map sentiment to score
             if label == "positive":
                 # Positive news gets higher score
-                return 0.5 + (confidence * 0.5)
+                score = 0.5 + (confidence * 0.5)
             elif label == "negative":
                 # Negative news still valuable but lower score
-                return 0.5 - (confidence * 0.3)
+                score = 0.5 - (confidence * 0.3)
             else:  # neutral
                 # Neutral is middle ground
-                return 0.5 + (confidence * 0.2)
+                score = 0.5 + (confidence * 0.2)
+
+            return score, label, confidence
         except Exception as e:
             logger.warning("ML sentiment analysis failed: %s", str(e))
-            return 0.5
+            return 0.5, "neutral", 0.0
 
     def _get_ml_sentiment_explanation(self, score: float) -> str:
         """Generate explanation for ML sentiment score"""

@@ -63,6 +63,13 @@ if "caches_warmed" not in st.session_state:
         f"across {cache_stats['sectors_cached']} sectors!"
     )
 
+# Preload ML models if enabled
+if "models_loaded" not in st.session_state:
+    from utils.model_loader import preload_models_with_ui
+
+    preload_models_with_ui()
+    st.session_state.models_loaded = True
+
 # Render sidebar (sets ai_enabled and confidence_level in session state)
 render_sidebar()
 

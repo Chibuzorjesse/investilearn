@@ -26,6 +26,10 @@ def render_sidebar() -> tuple[bool, str]:
                 "💡 Your interactions help improve recommendations. "
                 "No personal data is collected."
             )
+            st.info(
+                "🔒 **Privacy First:** All AI models run locally on "
+                "your device. No data is sent to external APIs."
+            )
 
             # ML models toggle
             use_ml_ranking = st.checkbox(
@@ -40,6 +44,7 @@ def render_sidebar() -> tuple[bool, str]:
 
             if use_ml_ranking:
                 st.caption("🧠 Using sentence embeddings & FinBERT sentiment analysis")
+                st.caption("📍 Models run 100% locally - no external API calls")
 
             confidence_level = st.select_slider(
                 "AI confidence threshold",
