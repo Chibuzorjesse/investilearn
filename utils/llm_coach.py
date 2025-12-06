@@ -55,12 +55,18 @@ class InvestmentCoach:
             return False, "Ollama library not installed"
 
         try:
-            # Check if Ollama is running
-            ollama.list()
+            # Check if Ollama is running and get models
+            models_response = ollama.list()
 
-            # Check if model exists
-            models = ollama.list()
-            model_names = [m["name"] for m in models.get("models", [])]
+            # Extract model names - response is a dict with 'models' key
+            models_list = models_response.get("models", [])
+            if not models_list:
+                # No models installed
+                msg = f"No models found. Run: ollama pull {self.model}"
+                return (False, msg)
+
+            # Model names can be in 'name' or 'model' field
+            model_names = [m.get("name", m.get("model", "")) for m in models_list]
 
             if not any(self.model in name for name in model_names):
                 msg = f"Model {self.model} not found. Run: ollama pull {self.model}"
