@@ -10,10 +10,17 @@ Usage:
 """
 
 import argparse
+import os
 import sys
 import time
+import warnings
 from datetime import datetime
 from pathlib import Path
+
+# Suppress Streamlit warnings when running outside Streamlit context
+os.environ["STREAMLIT_RUNTIME_SCRIPT_RUN_CTX"] = "1"
+warnings.filterwarnings("ignore", message=".*ScriptRunContext.*")
+warnings.filterwarnings("ignore", message=".*No runtime found.*")
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
