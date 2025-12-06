@@ -59,8 +59,9 @@ def render_ratios_section(
     st.markdown(f"#### {ratio_category} Ratios")
     st.info(info_text)
 
-    # Calculate comparison data
-    five_yr_avg = calculate_5yr_average(info, income_stmt, balance_sheet)
+    # Calculate comparison data with loading indicator
+    with st.spinner("📊 Calculating industry benchmarks..."):
+        five_yr_avg = calculate_5yr_average(info, income_stmt, balance_sheet)
 
     # Filter out metrics that have no data (N/A)
     available_metrics = [
