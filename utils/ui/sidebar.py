@@ -23,8 +23,7 @@ def render_sidebar() -> tuple[bool, str]:
         if ai_enabled:
             st.success("✓ AI features active")
             st.caption(
-                "💡 Your interactions help improve recommendations. "
-                "No personal data is collected."
+                "💡 Your interactions help improve recommendations. No personal data is collected."
             )
             st.info(
                 "🔒 **Privacy First:** All AI models run locally on "

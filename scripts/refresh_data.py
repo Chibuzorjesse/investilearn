@@ -101,11 +101,11 @@ def refresh_all_sectors(delay: float = 1.0) -> dict:
     elapsed = time.time() - start_time
     successful = sum(1 for v in results.values() if v == "success")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("✨ Refresh complete!")
     print(f"   Successful: {successful}/{len(sectors)} sectors")
     print(f"   Time taken: {elapsed / 60:.1f} minutes")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     return results
 

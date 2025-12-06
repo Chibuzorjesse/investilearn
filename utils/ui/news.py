@@ -163,9 +163,7 @@ def _render_news_items(display_items: list) -> None:
             st.caption(f"{publisher} • {date_str}")
 
             if st.session_state.get("ai_enabled", True):
-                st.caption(
-                    f"Relevance Score: {ai_score:.0%} | " f"Confidence: {ai_confidence.title()}"
-                )
+                st.caption(f"Relevance Score: {ai_score:.0%} | Confidence: {ai_confidence.title()}")
 
             st.markdown(f"[Read more →]({link})")
 
@@ -225,9 +223,7 @@ def _render_news_items(display_items: list) -> None:
                         st.markdown(f"- **{factor.title()}**: {explanation}")
 
                     st.markdown("---")
-                    st.caption(
-                        f"Overall relevance: {ai_score:.0%} | " f"Confidence: {ai_confidence}"
-                    )
+                    st.caption(f"Overall relevance: {ai_score:.0%} | Confidence: {ai_confidence}")
 
                     # Show confidence explanation
                     confidence_explanations = {
@@ -235,8 +231,8 @@ def _render_news_items(display_items: list) -> None:
                             "🟢 High confidence based on: strong relevance "
                             "score, credible source, complete article"
                         ),
-                        "medium": ("🟡 Medium confidence - some factors may be " "uncertain"),
-                        "low": ("🔴 Low confidence - limited information or " "weak signals"),
+                        "medium": ("🟡 Medium confidence - some factors may be uncertain"),
+                        "low": ("🔴 Low confidence - limited information or weak signals"),
                     }
                     if use_ml and ml_details:
                         # Enhanced explanation with ML factors
@@ -266,7 +262,7 @@ def _render_news_items(display_items: list) -> None:
 
                     if use_ml:
                         st.caption(
-                            "🧠 ML models: Sentence embeddings (semantic) + " "FinBERT (sentiment)"
+                            "🧠 ML models: Sentence embeddings (semantic) + FinBERT (sentiment)"
                         )
                     else:
                         st.caption(

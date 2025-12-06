@@ -107,20 +107,18 @@ def render_additional_resources(ticker: str | None = None, cik: str | None = Non
             # SEC EDGAR links
             edgar_base = "https://www.sec.gov/cgi-bin/browse-edgar"
             st.markdown(
-                f"- [10-K Annual Report]({edgar_base}" f"?action=getcompany&CIK={cik}&type=10-K)"
+                f"- [10-K Annual Report]({edgar_base}?action=getcompany&CIK={cik}&type=10-K)"
             )
             st.markdown(
-                f"- [10-Q Quarterly Report]({edgar_base}" f"?action=getcompany&CIK={cik}&type=10-Q)"
+                f"- [10-Q Quarterly Report]({edgar_base}?action=getcompany&CIK={cik}&type=10-Q)"
             )
             st.markdown(
-                f"- [8-K Current Report]({edgar_base}" f"?action=getcompany&CIK={cik}&type=8-K)"
+                f"- [8-K Current Report]({edgar_base}?action=getcompany&CIK={cik}&type=8-K)"
             )
             st.markdown(
-                f"- [Proxy Statements]({edgar_base}" f"?action=getcompany&CIK={cik}&type=DEF+14A)"
+                f"- [Proxy Statements]({edgar_base}?action=getcompany&CIK={cik}&type=DEF+14A)"
             )
-            st.markdown(
-                f"- [All Filings]({edgar_base}" f"?action=getcompany&CIK={cik}&owner=exclude)"
-            )
+            st.markdown(f"- [All Filings]({edgar_base}?action=getcompany&CIK={cik}&owner=exclude)")
         else:
             st.caption("Search for a company to see SEC filing links")
 
@@ -148,9 +146,7 @@ def render_additional_resources(ticker: str | None = None, cik: str | None = Non
             "(https://www.investopedia.com/financial-ratios-4689817)"
         )
         st.markdown(
-            "- [Long-term Investing]"
-            "(https://www.investopedia.com/terms/l/"
-            "longterminvestments.asp)"
+            "- [Long-term Investing](https://www.investopedia.com/terms/l/longterminvestments.asp)"
         )
         st.markdown(
             "- [Reading Financial Statements]"
