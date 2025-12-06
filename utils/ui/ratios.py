@@ -1,5 +1,6 @@
 """Financial ratios component"""
 
+import math
 from datetime import datetime
 
 import streamlit as st
@@ -89,13 +90,21 @@ def render_ratios_section(
         with col_m1:
             st.metric(ratio_display, formatted_value)
         with col_m2:
-            if industry_avg is not None:
+            # Check for valid number (not None and not NaN)
+            is_valid_industry = industry_avg is not None and not (
+                isinstance(industry_avg, float) and math.isnan(industry_avg)
+            )
+            if is_valid_industry:
                 ind_formatted = format_ratio_value(industry_avg, ratio_key)
                 st.caption(f"vs Industry: {ind_formatted}")
             else:
                 st.caption("vs Industry: Coming soon")
         with col_m3:
-            if yr5_avg is not None:
+            # Check for valid number (not None and not NaN)
+            is_valid_5yr = yr5_avg is not None and not (
+                isinstance(yr5_avg, float) and math.isnan(yr5_avg)
+            )
+            if is_valid_5yr:
                 avg_formatted = format_ratio_value(yr5_avg, ratio_key)
                 st.caption(f"vs 5Y Avg: {avg_formatted}")
             else:

@@ -1,0 +1,737 @@
+sector,ticker,category
+Technology,AAPL,Mega cap tech
+Technology,MSFT,Mega cap tech
+Technology,GOOGL,Mega cap tech
+Technology,GOOG,Mega cap tech
+Technology,META,Mega cap tech
+Technology,NVDA,Mega cap tech
+Technology,TSLA,Mega cap tech
+Technology,CRM,Software & Cloud
+Technology,ORCL,Software & Cloud
+Technology,ADBE,Software & Cloud
+Technology,NOW,Software & Cloud
+Technology,INTU,Software & Cloud
+Technology,WDAY,Software & Cloud
+Technology,PANW,Software & Cloud
+Technology,CRWD,Software & Cloud
+Technology,DDOG,Software & Cloud
+Technology,ZS,Software & Cloud
+Technology,SNOW,Software & Cloud
+Technology,MDB,Software & Cloud
+Technology,NET,Software & Cloud
+Technology,TEAM,Software & Cloud
+Technology,ZM,Software & Cloud
+Technology,DOCU,Software & Cloud
+Technology,OKTA,Software & Cloud
+Technology,VEEV,Software & Cloud
+Technology,ANSS,Software & Cloud
+Technology,CDNS,Software & Cloud
+Technology,SNPS,Software & Cloud
+Technology,FTNT,Software & Cloud
+Technology,INTC,Semiconductors
+Technology,AMD,Semiconductors
+Technology,QCOM,Semiconductors
+Technology,AVGO,Semiconductors
+Technology,TXN,Semiconductors
+Technology,AMAT,Semiconductors
+Technology,MU,Semiconductors
+Technology,LRCX,Semiconductors
+Technology,ADI,Semiconductors
+Technology,MCHP,Semiconductors
+Technology,KLAC,Semiconductors
+Technology,NXPI,Semiconductors
+Technology,MRVL,Semiconductors
+Technology,ON,Semiconductors
+Technology,MPWR,Semiconductors
+Technology,SWKS,Semiconductors
+Technology,IBM,IT Services & Hardware
+Technology,CSCO,IT Services & Hardware
+Technology,SHOP,IT Services & Hardware
+Technology,SQ,IT Services & Hardware
+Technology,PYPL,IT Services & Hardware
+Technology,ACN,IT Services & Hardware
+Technology,ADSK,IT Services & Hardware
+Technology,HPQ,IT Services & Hardware
+Technology,DELL,IT Services & Hardware
+Technology,HPE,IT Services & Hardware
+Technology,NTAP,IT Services & Hardware
+Technology,WDC,IT Services & Hardware
+Technology,STX,IT Services & Hardware
+Technology,AKAM,IT Services & Hardware
+Technology,ANET,IT Services & Hardware
+Technology,FFIV,IT Services & Hardware
+Technology,AMZN,E-commerce & Internet
+Technology,BABA,E-commerce & Internet
+Technology,JD,E-commerce & Internet
+Technology,MELI,E-commerce & Internet
+Technology,EBAY,E-commerce & Internet
+Technology,ETSY,E-commerce & Internet
+Technology,W,E-commerce & Internet
+Technology,PINS,E-commerce & Internet
+Technology,EA,Gaming & Entertainment Tech
+Technology,TTWO,Gaming & Entertainment Tech
+Technology,RBLX,Gaming & Entertainment Tech
+Technology,U,Gaming & Entertainment Tech
+Technology,MTCH,Gaming & Entertainment Tech
+Technology,NFLX,Gaming & Entertainment Tech
+Technology,DIS,Gaming & Entertainment Tech
+Technology,ROKU,Gaming & Entertainment Tech
+Healthcare,JNJ,Pharma (Large Cap)
+Healthcare,UNH,Pharma (Large Cap)
+Healthcare,PFE,Pharma (Large Cap)
+Healthcare,ABBV,Pharma (Large Cap)
+Healthcare,MRK,Pharma (Large Cap)
+Healthcare,LLY,Pharma (Large Cap)
+Healthcare,BMY,Pharma (Large Cap)
+Healthcare,AMGN,Pharma (Large Cap)
+Healthcare,GILD,Pharma (Large Cap)
+Healthcare,REGN,Pharma (Large Cap)
+Healthcare,BIIB,Pharma (Large Cap)
+Healthcare,MRNA,Pharma (Large Cap)
+Healthcare,VRTX,Pharma (Large Cap)
+Healthcare,ILMN,Pharma (Large Cap)
+Healthcare,ALXN,Pharma (Large Cap)
+Healthcare,INCY,Pharma (Large Cap)
+Healthcare,NBIX,Pharma (Mid Cap)
+Healthcare,JAZZ,Pharma (Mid Cap)
+Healthcare,UTHR,Pharma (Mid Cap)
+Healthcare,EXEL,Pharma (Mid Cap)
+Healthcare,BMRN,Pharma (Mid Cap)
+Healthcare,SGEN,Pharma (Mid Cap)
+Healthcare,HALO,Pharma (Mid Cap)
+Healthcare,TMO,Medical Devices
+Healthcare,ABT,Medical Devices
+Healthcare,DHR,Medical Devices
+Healthcare,MDT,Medical Devices
+Healthcare,ISRG,Medical Devices
+Healthcare,SYK,Medical Devices
+Healthcare,BSX,Medical Devices
+Healthcare,EW,Medical Devices
+Healthcare,ZBH,Medical Devices
+Healthcare,BAX,Medical Devices
+Healthcare,BDX,Medical Devices
+Healthcare,HOLX,Medical Devices
+Healthcare,ALGN,Medical Devices
+Healthcare,DXCM,Medical Devices
+Healthcare,IDXX,Medical Devices
+Healthcare,IQV,Medical Devices
+Healthcare,RMD,Medical Devices
+Healthcare,PODD,Medical Devices
+Healthcare,TDOC,Medical Devices
+Healthcare,IRTC,Medical Devices
+Healthcare,VEEV,Medical Devices
+Healthcare,CVS,Health Insurance & Services
+Healthcare,CI,Health Insurance & Services
+Healthcare,HUM,Health Insurance & Services
+Healthcare,CNC,Health Insurance & Services
+Healthcare,ANTM,Health Insurance & Services
+Healthcare,MOH,Health Insurance & Services
+Healthcare,ELV,Health Insurance & Services
+Healthcare,ZTS,Biotech
+Healthcare,TECH,Biotech
+Healthcare,ARWR,Biotech
+Healthcare,CRSP,Biotech
+Healthcare,NTLA,Biotech
+Healthcare,EDIT,Biotech
+Healthcare,BEAM,Biotech
+Healthcare,BLUE,Biotech
+Healthcare,FOLD,Biotech
+Healthcare,RARE,Biotech
+Healthcare,IONS,Biotech
+Healthcare,SRPT,Biotech
+Healthcare,A,Diagnostics & Research
+Healthcare,DGX,Diagnostics & Research
+Healthcare,LH,Diagnostics & Research
+Healthcare,QGEN,Diagnostics & Research
+Healthcare,MTD,Diagnostics & Research
+Healthcare,QDEL,Diagnostics & Research
+Healthcare,CDNA,Diagnostics & Research
+Financial Services,JPM,Banks (Large Cap)
+Financial Services,BAC,Banks (Large Cap)
+Financial Services,WFC,Banks (Large Cap)
+Financial Services,C,Banks (Large Cap)
+Financial Services,USB,Banks (Large Cap)
+Financial Services,PNC,Banks (Large Cap)
+Financial Services,TFC,Banks (Large Cap)
+Financial Services,COF,Banks (Large Cap)
+Financial Services,BK,Banks (Large Cap)
+Financial Services,STT,Banks (Large Cap)
+Financial Services,FITB,Banks (Large Cap)
+Financial Services,HBAN,Banks (Large Cap)
+Financial Services,RF,Banks (Large Cap)
+Financial Services,CFG,Banks (Large Cap)
+Financial Services,KEY,Banks (Large Cap)
+Financial Services,GS,Investment Banks & Brokerages
+Financial Services,MS,Investment Banks & Brokerages
+Financial Services,SCHW,Investment Banks & Brokerages
+Financial Services,BLK,Investment Banks & Brokerages
+Financial Services,SPGI,Investment Banks & Brokerages
+Financial Services,MCO,Investment Banks & Brokerages
+Financial Services,MSCI,Investment Banks & Brokerages
+Financial Services,ICE,Investment Banks & Brokerages
+Financial Services,CME,Investment Banks & Brokerages
+Financial Services,NDAQ,Investment Banks & Brokerages
+Financial Services,MKTX,Investment Banks & Brokerages
+Financial Services,IBKR,Investment Banks & Brokerages
+Financial Services,VIRT,Investment Banks & Brokerages
+Financial Services,BRK.B,Insurance
+Financial Services,AXP,Insurance
+Financial Services,CB,Insurance
+Financial Services,PGR,Insurance
+Financial Services,TRV,Insurance
+Financial Services,ALL,Insurance
+Financial Services,AIG,Insurance
+Financial Services,MET,Insurance
+Financial Services,PRU,Insurance
+Financial Services,AFL,Insurance
+Financial Services,HIG,Insurance
+Financial Services,CNA,Insurance
+Financial Services,WRB,Insurance
+Financial Services,RNR,Insurance
+Financial Services,CINF,Insurance
+Financial Services,MMC,Asset Management
+Financial Services,AON,Asset Management
+Financial Services,AJG,Asset Management
+Financial Services,WTW,Asset Management
+Financial Services,BEN,Asset Management
+Financial Services,IVZ,Asset Management
+Financial Services,TROW,Asset Management
+Financial Services,APAM,Asset Management
+Financial Services,AMT,REITs (Financial)
+Financial Services,PLD,REITs (Financial)
+Financial Services,CCI,REITs (Financial)
+Financial Services,EQIX,REITs (Financial)
+Financial Services,PSA,REITs (Financial)
+Financial Services,DLR,REITs (Financial)
+Financial Services,SPG,REITs (Financial)
+Financial Services,O,REITs (Financial)
+Financial Services,WELL,REITs (Financial)
+Financial Services,AVB,REITs (Financial)
+Financial Services,EQR,REITs (Financial)
+Financial Services,VTR,REITs (Financial)
+Financial Services,ARE,REITs (Financial)
+Financial Services,MAA,REITs (Financial)
+Financial Services,UDR,REITs (Financial)
+Financial Services,CPT,REITs (Financial)
+Financial Services,V,Consumer Finance
+Financial Services,MA,Consumer Finance
+Financial Services,PYPL,Consumer Finance
+Financial Services,SQ,Consumer Finance
+Financial Services,AFRM,Consumer Finance
+Financial Services,UPST,Consumer Finance
+Financial Services,LC,Consumer Finance
+Financial Services,SOFI,Consumer Finance
+Financial Services,FIS,Fintech
+Financial Services,FISV,Fintech
+Financial Services,COIN,Fintech
+Financial Services,HOOD,Fintech
+Consumer Cyclical,AMZN,E-commerce & Retail
+Consumer Cyclical,HD,E-commerce & Retail
+Consumer Cyclical,LOW,E-commerce & Retail
+Consumer Cyclical,TJX,E-commerce & Retail
+Consumer Cyclical,ROST,E-commerce & Retail
+Consumer Cyclical,BKNG,E-commerce & Retail
+Consumer Cyclical,EBAY,E-commerce & Retail
+Consumer Cyclical,ETSY,E-commerce & Retail
+Consumer Cyclical,W,E-commerce & Retail
+Consumer Cyclical,CHWY,E-commerce & Retail
+Consumer Cyclical,BBBY,E-commerce & Retail
+Consumer Cyclical,WSM,E-commerce & Retail
+Consumer Cyclical,RH,E-commerce & Retail
+Consumer Cyclical,ULTA,E-commerce & Retail
+Consumer Cyclical,AEO,E-commerce & Retail
+Consumer Cyclical,ANF,E-commerce & Retail
+Consumer Cyclical,TSLA,Automotive
+Consumer Cyclical,F,Automotive
+Consumer Cyclical,GM,Automotive
+Consumer Cyclical,RIVN,Automotive
+Consumer Cyclical,LCID,Automotive
+Consumer Cyclical,NIO,Automotive
+Consumer Cyclical,LI,Automotive
+Consumer Cyclical,XPEV,Automotive
+Consumer Cyclical,MCD,Restaurants & Food Services
+Consumer Cyclical,SBUX,Restaurants & Food Services
+Consumer Cyclical,YUM,Restaurants & Food Services
+Consumer Cyclical,CMG,Restaurants & Food Services
+Consumer Cyclical,QSR,Restaurants & Food Services
+Consumer Cyclical,DPZ,Restaurants & Food Services
+Consumer Cyclical,DNKN,Restaurants & Food Services
+Consumer Cyclical,WEN,Restaurants & Food Services
+Consumer Cyclical,DRI,Restaurants & Food Services
+Consumer Cyclical,EAT,Restaurants & Food Services
+Consumer Cyclical,TXRH,Restaurants & Food Services
+Consumer Cyclical,BLMN,Restaurants & Food Services
+Consumer Cyclical,CAKE,Restaurants & Food Services
+Consumer Cyclical,PLAY,Restaurants & Food Services
+Consumer Cyclical,NKE,Apparel & Footwear
+Consumer Cyclical,LULU,Apparel & Footwear
+Consumer Cyclical,DECK,Apparel & Footwear
+Consumer Cyclical,CROX,Apparel & Footwear
+Consumer Cyclical,SKX,Apparel & Footwear
+Consumer Cyclical,UAA,Apparel & Footwear
+Consumer Cyclical,VFC,Apparel & Footwear
+Consumer Cyclical,RL,Apparel & Footwear
+Consumer Cyclical,PVH,Apparel & Footwear
+Consumer Cyclical,HBI,Apparel & Footwear
+Consumer Cyclical,GIII,Apparel & Footwear
+Consumer Cyclical,TLRD,Apparel & Footwear
+Consumer Cyclical,ORLY,Auto Parts & Services
+Consumer Cyclical,AZO,Auto Parts & Services
+Consumer Cyclical,AAP,Auto Parts & Services
+Consumer Cyclical,GPC,Auto Parts & Services
+Consumer Cyclical,DKS,Auto Parts & Services
+Consumer Cyclical,BGFV,Auto Parts & Services
+Consumer Cyclical,POOL,Home Improvement & Furnishings
+Consumer Cyclical,BECN,Home Improvement & Furnishings
+Consumer Cyclical,LOVE,Home Improvement & Furnishings
+Consumer Cyclical,FBIN,Home Improvement & Furnishings
+Consumer Cyclical,ABNB,Consumer Discretionary Services
+Consumer Cyclical,EXPE,Consumer Discretionary Services
+Consumer Cyclical,TRIP,Consumer Discretionary Services
+Consumer Cyclical,MAR,Consumer Discretionary Services
+Consumer Cyclical,HLT,Consumer Discretionary Services
+Consumer Cyclical,H,Consumer Discretionary Services
+Consumer Cyclical,WH,Consumer Discretionary Services
+Consumer Cyclical,IHG,Consumer Discretionary Services
+Consumer Cyclical,WYNN,Consumer Discretionary Services
+Consumer Cyclical,LVS,Consumer Discretionary Services
+Consumer Cyclical,MGM,Consumer Discretionary Services
+Consumer Cyclical,CZR,Consumer Discretionary Services
+Consumer Cyclical,PENN,Consumer Discretionary Services
+Consumer Cyclical,DKNG,Consumer Discretionary Services
+Consumer Cyclical,BALY,Consumer Discretionary Services
+Consumer Cyclical,CCL,Leisure & Entertainment
+Consumer Cyclical,RCL,Leisure & Entertainment
+Consumer Cyclical,NCLH,Leisure & Entertainment
+Consumer Cyclical,LYV,Leisure & Entertainment
+Consumer Cyclical,MSG,Leisure & Entertainment
+Consumer Cyclical,MSGS,Leisure & Entertainment
+Consumer Cyclical,TGT,Retail (General)
+Consumer Cyclical,DG,Retail (General)
+Consumer Cyclical,DLTR,Retail (General)
+Consumer Cyclical,BBY,Retail (General)
+Consumer Cyclical,M,Retail (General)
+Consumer Cyclical,KSS,Retail (General)
+Consumer Cyclical,JWN,Retail (General)
+Consumer Defensive,WMT,Retail (Grocery & Discount)
+Consumer Defensive,COST,Retail (Grocery & Discount)
+Consumer Defensive,TGT,Retail (Grocery & Discount)
+Consumer Defensive,KR,Retail (Grocery & Discount)
+Consumer Defensive,SYY,Retail (Grocery & Discount)
+Consumer Defensive,USFD,Retail (Grocery & Discount)
+Consumer Defensive,PFGC,Retail (Grocery & Discount)
+Consumer Defensive,KO,Beverages
+Consumer Defensive,PEP,Beverages
+Consumer Defensive,MNST,Beverages
+Consumer Defensive,KDP,Beverages
+Consumer Defensive,CELH,Beverages
+Consumer Defensive,STZ,Beverages
+Consumer Defensive,TAP,Beverages
+Consumer Defensive,SAM,Beverages
+Consumer Defensive,BF.B,Beverages
+Consumer Defensive,DEO,Beverages
+Consumer Defensive,PG,Food & Packaged Goods
+Consumer Defensive,MDLZ,Food & Packaged Goods
+Consumer Defensive,GIS,Food & Packaged Goods
+Consumer Defensive,HSY,Food & Packaged Goods
+Consumer Defensive,K,Food & Packaged Goods
+Consumer Defensive,CAG,Food & Packaged Goods
+Consumer Defensive,SJM,Food & Packaged Goods
+Consumer Defensive,CPB,Food & Packaged Goods
+Consumer Defensive,HRL,Food & Packaged Goods
+Consumer Defensive,MKC,Food & Packaged Goods
+Consumer Defensive,LW,Food & Packaged Goods
+Consumer Defensive,POST,Food & Packaged Goods
+Consumer Defensive,BGS,Food & Packaged Goods
+Consumer Defensive,LANC,Food & Packaged Goods
+Consumer Defensive,JJSF,Food & Packaged Goods
+Consumer Defensive,PM,Tobacco
+Consumer Defensive,MO,Tobacco
+Consumer Defensive,BTI,Tobacco
+Consumer Defensive,EL,Personal Care & Household
+Consumer Defensive,CL,Personal Care & Household
+Consumer Defensive,KMB,Personal Care & Household
+Consumer Defensive,CHD,Personal Care & Household
+Consumer Defensive,CLX,Personal Care & Household
+Consumer Defensive,EPC,Personal Care & Household
+Consumer Defensive,COTY,Personal Care & Household
+Consumer Defensive,ELF,Personal Care & Household
+Consumer Defensive,KHC,Consumer Staples Services
+Consumer Defensive,CALM,Consumer Staples Services
+Consumer Defensive,FLO,Consumer Staples Services
+Consumer Defensive,INGR,Consumer Staples Services
+Consumer Defensive,SENEA,Consumer Staples Services
+Consumer Defensive,SMPL,Consumer Staples Services
+Energy,XOM,Oil & Gas (Integrated)
+Energy,CVX,Oil & Gas (Integrated)
+Energy,COP,Oil & Gas (Integrated)
+Energy,BP,Oil & Gas (Integrated)
+Energy,SHEL,Oil & Gas (Integrated)
+Energy,TTE,Oil & Gas (Integrated)
+Energy,EOG,Oil & Gas (E&P)
+Energy,OXY,Oil & Gas (E&P)
+Energy,DVN,Oil & Gas (E&P)
+Energy,HES,Oil & Gas (E&P)
+Energy,FANG,Oil & Gas (E&P)
+Energy,PXD,Oil & Gas (E&P)
+Energy,MRO,Oil & Gas (E&P)
+Energy,APA,Oil & Gas (E&P)
+Energy,CTRA,Oil & Gas (E&P)
+Energy,CLR,Oil & Gas (E&P)
+Energy,PR,Oil & Gas (E&P)
+Energy,MTDR,Oil & Gas (E&P)
+Energy,AR,Oil & Gas (E&P)
+Energy,CHRD,Oil & Gas (E&P)
+Energy,MGY,Oil & Gas (E&P)
+Energy,SM,Oil & Gas (E&P)
+Energy,SLB,Oil & Gas (Services)
+Energy,HAL,Oil & Gas (Services)
+Energy,BKR,Oil & Gas (Services)
+Energy,FTI,Oil & Gas (Services)
+Energy,NOV,Oil & Gas (Services)
+Energy,HP,Oil & Gas (Services)
+Energy,WFRD,Oil & Gas (Services)
+Energy,NINE,Oil & Gas (Services)
+Energy,LBRT,Oil & Gas (Services)
+Energy,PUMP,Oil & Gas (Services)
+Energy,OII,Oil & Gas (Services)
+Energy,MPC,Oil & Gas (Refining)
+Energy,PSX,Oil & Gas (Refining)
+Energy,VLO,Oil & Gas (Refining)
+Energy,HFC,Oil & Gas (Refining)
+Energy,DK,Oil & Gas (Refining)
+Energy,CIVI,Oil & Gas (Refining)
+Energy,PBF,Oil & Gas (Refining)
+Energy,KMI,Oil & Gas (Midstream)
+Energy,WMB,Oil & Gas (Midstream)
+Energy,OKE,Oil & Gas (Midstream)
+Energy,EPD,Oil & Gas (Midstream)
+Energy,ET,Oil & Gas (Midstream)
+Energy,MPLX,Oil & Gas (Midstream)
+Energy,TRGP,Oil & Gas (Midstream)
+Energy,PAA,Oil & Gas (Midstream)
+Energy,AM,Oil & Gas (Midstream)
+Energy,LNG,Oil & Gas (Midstream)
+Energy,ENLC,Oil & Gas (Midstream)
+Energy,DTM,Oil & Gas (Midstream)
+Energy,NEE,Alternative Energy
+Energy,ENPH,Alternative Energy
+Energy,SEDG,Alternative Energy
+Energy,FSLR,Alternative Energy
+Energy,RUN,Alternative Energy
+Energy,NOVA,Alternative Energy
+Energy,PLUG,Alternative Energy
+Energy,BE,Alternative Energy
+Industrials,BA,Aerospace & Defense
+Industrials,RTX,Aerospace & Defense
+Industrials,LMT,Aerospace & Defense
+Industrials,GD,Aerospace & Defense
+Industrials,NOC,Aerospace & Defense
+Industrials,HWM,Aerospace & Defense
+Industrials,TXT,Aerospace & Defense
+Industrials,LHX,Aerospace & Defense
+Industrials,HII,Aerospace & Defense
+Industrials,AJRD,Aerospace & Defense
+Industrials,KTOS,Aerospace & Defense
+Industrials,AVAV,Aerospace & Defense
+Industrials,SPR,Aerospace & Defense
+Industrials,HON,Industrial Conglomerates
+Industrials,GE,Industrial Conglomerates
+Industrials,MMM,Industrial Conglomerates
+Industrials,EMR,Industrial Conglomerates
+Industrials,ITW,Industrial Conglomerates
+Industrials,ETN,Industrial Conglomerates
+Industrials,ROK,Industrial Conglomerates
+Industrials,AME,Industrial Conglomerates
+Industrials,DOV,Industrial Conglomerates
+Industrials,PH,Industrial Conglomerates
+Industrials,IR,Industrial Conglomerates
+Industrials,CAT,Machinery & Equipment
+Industrials,DE,Machinery & Equipment
+Industrials,PCAR,Machinery & Equipment
+Industrials,CMI,Machinery & Equipment
+Industrials,OSK,Machinery & Equipment
+Industrials,WAB,Machinery & Equipment
+Industrials,AGCO,Machinery & Equipment
+Industrials,MTW,Machinery & Equipment
+Industrials,TEX,Machinery & Equipment
+Industrials,GNRC,Machinery & Equipment
+Industrials,HUBB,Machinery & Equipment
+Industrials,AOS,Machinery & Equipment
+Industrials,RBC,Machinery & Equipment
+Industrials,SNA,Machinery & Equipment
+Industrials,TTC,Machinery & Equipment
+Industrials,UNP,Transportation & Logistics
+Industrials,UPS,Transportation & Logistics
+Industrials,NSC,Transportation & Logistics
+Industrials,FDX,Transportation & Logistics
+Industrials,CSX,Transportation & Logistics
+Industrials,JBHT,Transportation & Logistics
+Industrials,ODFL,Transportation & Logistics
+Industrials,KNX,Transportation & Logistics
+Industrials,CHRW,Transportation & Logistics
+Industrials,EXPD,Transportation & Logistics
+Industrials,XPO,Transportation & Logistics
+Industrials,R,Transportation & Logistics
+Industrials,UBER,Transportation & Logistics
+Industrials,LYFT,Transportation & Logistics
+Industrials,DASH,Transportation & Logistics
+Industrials,GXO,Transportation & Logistics
+Industrials,CARR,Construction & Engineering
+Industrials,JCI,Construction & Engineering
+Industrials,FLS,Construction & Engineering
+Industrials,J,Construction & Engineering
+Industrials,PWR,Construction & Engineering
+Industrials,BLDR,Construction & Engineering
+Industrials,MTZ,Construction & Engineering
+Industrials,WCC,Construction & Engineering
+Industrials,ACM,Construction & Engineering
+Industrials,STRL,Construction & Engineering
+Industrials,MAS,Construction & Engineering
+Industrials,OC,Construction & Engineering
+Industrials,VMC,Construction & Engineering
+Industrials,MLM,Construction & Engineering
+Industrials,WM,Industrial Services
+Industrials,RSG,Industrial Services
+Industrials,WCN,Industrial Services
+Industrials,CVCO,Industrial Services
+Industrials,ROP,Industrial Services
+Industrials,ITT,Industrial Services
+Industrials,FAST,Industrial Services
+Industrials,WSO,Industrial Services
+Industrials,GWW,Industrial Services
+Industrials,DCI,Industrial Services
+Industrials,MSM,Industrial Services
+Communication Services,GOOGL,Internet & Media
+Communication Services,GOOG,Internet & Media
+Communication Services,META,Internet & Media
+Communication Services,NFLX,Internet & Media
+Communication Services,DIS,Internet & Media
+Communication Services,PARA,Internet & Media
+Communication Services,WBD,Internet & Media
+Communication Services,FOXA,Internet & Media
+Communication Services,FOX,Internet & Media
+Communication Services,SPOT,Internet & Media
+Communication Services,RBLX,Internet & Media
+Communication Services,MTCH,Internet & Media
+Communication Services,PINS,Internet & Media
+Communication Services,SNAP,Internet & Media
+Communication Services,ROKU,Internet & Media
+Communication Services,FUBO,Internet & Media
+Communication Services,BMBL,Internet & Media
+Communication Services,IAC,Internet & Media
+Communication Services,LBRDA,Internet & Media
+Communication Services,LBRDK,Internet & Media
+Communication Services,SIRI,Internet & Media
+Communication Services,CMCSA,Telecom
+Communication Services,VZ,Telecom
+Communication Services,T,Telecom
+Communication Services,TMUS,Telecom
+Communication Services,CHTR,Telecom
+Communication Services,LUMN,Telecom
+Communication Services,SHEN,Telecom
+Communication Services,FTR,Telecom
+Communication Services,USM,Telecom
+Communication Services,CABO,Telecom
+Communication Services,EA,Gaming & Entertainment
+Communication Services,TTWO,Gaming & Entertainment
+Communication Services,ATVI,Gaming & Entertainment
+Communication Services,ZNGA,Gaming & Entertainment
+Communication Services,U,Gaming & Entertainment
+Communication Services,PLTK,Gaming & Entertainment
+Communication Services,OMC,Advertising & Marketing
+Communication Services,IPG,Advertising & Marketing
+Communication Services,MGNI,Advertising & Marketing
+Communication Services,TTD,Advertising & Marketing
+Communication Services,APPS,Advertising & Marketing
+Communication Services,CRTO,Advertising & Marketing
+Communication Services,PUBM,Advertising & Marketing
+Communication Services,MAX,Advertising & Marketing
+Communication Services,NYT,Publishing & News
+Communication Services,NWSA,Publishing & News
+Communication Services,NWS,Publishing & News
+Communication Services,LEE,Publishing & News
+Communication Services,GCI,Publishing & News
+Communication Services,MCS,Publishing & News
+Real Estate,AMT,REITs (Data Centers & Infrastructure)
+Real Estate,CCI,REITs (Data Centers & Infrastructure)
+Real Estate,EQIX,REITs (Data Centers & Infrastructure)
+Real Estate,DLR,REITs (Data Centers & Infrastructure)
+Real Estate,SBAC,REITs (Data Centers & Infrastructure)
+Real Estate,QTS,REITs (Data Centers & Infrastructure)
+Real Estate,CONE,REITs (Data Centers & Infrastructure)
+Real Estate,SAFE,REITs (Data Centers & Infrastructure)
+Real Estate,PLD,REITs (Industrial & Logistics)
+Real Estate,PSA,REITs (Industrial & Logistics)
+Real Estate,CUBE,REITs (Industrial & Logistics)
+Real Estate,EXR,REITs (Industrial & Logistics)
+Real Estate,NSA,REITs (Industrial & Logistics)
+Real Estate,LSI,REITs (Industrial & Logistics)
+Real Estate,REXR,REITs (Industrial & Logistics)
+Real Estate,FR,REITs (Industrial & Logistics)
+Real Estate,STAG,REITs (Industrial & Logistics)
+Real Estate,TRNO,REITs (Industrial & Logistics)
+Real Estate,EGP,REITs (Industrial & Logistics)
+Real Estate,AVB,REITs (Residential)
+Real Estate,EQR,REITs (Residential)
+Real Estate,MAA,REITs (Residential)
+Real Estate,UDR,REITs (Residential)
+Real Estate,CPT,REITs (Residential)
+Real Estate,ESS,REITs (Residential)
+Real Estate,AIRC,REITs (Residential)
+Real Estate,AIV,REITs (Residential)
+Real Estate,BRT,REITs (Residential)
+Real Estate,CSR,REITs (Residential)
+Real Estate,IRT,REITs (Residential)
+Real Estate,NXRT,REITs (Residential)
+Real Estate,SPG,REITs (Retail)
+Real Estate,O,REITs (Retail)
+Real Estate,REG,REITs (Retail)
+Real Estate,KIM,REITs (Retail)
+Real Estate,BRX,REITs (Retail)
+Real Estate,WPC,REITs (Retail)
+Real Estate,ADC,REITs (Retail)
+Real Estate,GTY,REITs (Retail)
+Real Estate,ROIC,REITs (Retail)
+Real Estate,RPAI,REITs (Retail)
+Real Estate,AKR,REITs (Retail)
+Real Estate,SITE,REITs (Retail)
+Real Estate,STOR,REITs (Retail)
+Real Estate,BXP,REITs (Office)
+Real Estate,VNO,REITs (Office)
+Real Estate,SLG,REITs (Office)
+Real Estate,HPP,REITs (Office)
+Real Estate,DEI,REITs (Office)
+Real Estate,JBGS,REITs (Office)
+Real Estate,PGRE,REITs (Office)
+Real Estate,CUZ,REITs (Office)
+Real Estate,WELL,REITs (Healthcare)
+Real Estate,VTR,REITs (Healthcare)
+Real Estate,PEAK,REITs (Healthcare)
+Real Estate,OHI,REITs (Healthcare)
+Real Estate,HR,REITs (Healthcare)
+Real Estate,DOC,REITs (Healthcare)
+Real Estate,LTC,REITs (Healthcare)
+Real Estate,SBRA,REITs (Healthcare)
+Real Estate,ARE,REITs (Specialty)
+Real Estate,INVH,REITs (Specialty)
+Real Estate,AMH,REITs (Specialty)
+Real Estate,SUI,REITs (Specialty)
+Real Estate,ELS,REITs (Specialty)
+Real Estate,VRE,REITs (Specialty)
+Real Estate,COLD,REITs (Specialty)
+Real Estate,IIPR,REITs (Specialty)
+Real Estate,VICI,REITs (Specialty)
+Real Estate,CBRE,Real Estate Services
+Real Estate,JLL,Real Estate Services
+Real Estate,CSGP,Real Estate Services
+Real Estate,Z,Real Estate Services
+Real Estate,RDFN,Real Estate Services
+Real Estate,OPEN,Real Estate Services
+Real Estate,COMP,Real Estate Services
+Real Estate,EXPI,Real Estate Services
+Utilities,NEE,Electric Utilities
+Utilities,DUK,Electric Utilities
+Utilities,SO,Electric Utilities
+Utilities,D,Electric Utilities
+Utilities,AEP,Electric Utilities
+Utilities,EXC,Electric Utilities
+Utilities,SRE,Electric Utilities
+Utilities,XEL,Electric Utilities
+Utilities,PCG,Electric Utilities
+Utilities,ED,Electric Utilities
+Utilities,EIX,Electric Utilities
+Utilities,WEC,Electric Utilities
+Utilities,DTE,Electric Utilities
+Utilities,PPL,Electric Utilities
+Utilities,ES,Electric Utilities
+Utilities,FE,Electric Utilities
+Utilities,ETR,Electric Utilities
+Utilities,AEE,Electric Utilities
+Utilities,CMS,Electric Utilities
+Utilities,CNP,Electric Utilities
+Utilities,EVRG,Electric Utilities
+Utilities,LNT,Electric Utilities
+Utilities,NI,Electric Utilities
+Utilities,PNW,Electric Utilities
+Utilities,AES,Electric Utilities
+Utilities,VST,Electric Utilities
+Utilities,ATO,Electric Utilities
+Utilities,NRG,Electric Utilities
+Utilities,OGE,Electric Utilities
+Utilities,AWK,Gas Utilities
+Utilities,SJW,Gas Utilities
+Utilities,YORW,Gas Utilities
+Utilities,MSEX,Gas Utilities
+Utilities,SJI,Gas Utilities
+Utilities,NJR,Gas Utilities
+Utilities,SR,Gas Utilities
+Utilities,WTR,Water Utilities
+Utilities,CWT,Water Utilities
+Utilities,ARTNA,Water Utilities
+Utilities,MDU,Multi-Utilities
+Utilities,BKH,Multi-Utilities
+Utilities,AVA,Multi-Utilities
+Utilities,OTTR,Multi-Utilities
+Basic Materials,LIN,Chemicals
+Basic Materials,APD,Chemicals
+Basic Materials,ECL,Chemicals
+Basic Materials,DD,Chemicals
+Basic Materials,DOW,Chemicals
+Basic Materials,EMN,Chemicals
+Basic Materials,CE,Chemicals
+Basic Materials,FMC,Chemicals
+Basic Materials,IFF,Chemicals
+Basic Materials,ALB,Chemicals
+Basic Materials,SEE,Chemicals
+Basic Materials,PPG,Chemicals
+Basic Materials,SHW,Chemicals
+Basic Materials,RPM,Chemicals
+Basic Materials,AXTA,Chemicals
+Basic Materials,HUN,Chemicals
+Basic Materials,OLN,Chemicals
+Basic Materials,NEU,Chemicals
+Basic Materials,CC,Chemicals
+Basic Materials,ESI,Chemicals
+Basic Materials,KWR,Chemicals
+Basic Materials,CBT,Chemicals
+Basic Materials,NGVT,Chemicals
+Basic Materials,NEM,Metals & Mining
+Basic Materials,FCX,Metals & Mining
+Basic Materials,NUE,Metals & Mining
+Basic Materials,STLD,Metals & Mining
+Basic Materials,CLF,Metals & Mining
+Basic Materials,X,Metals & Mining
+Basic Materials,RS,Metals & Mining
+Basic Materials,CMC,Metals & Mining
+Basic Materials,MP,Metals & Mining
+Basic Materials,IE,Metals & Mining
+Basic Materials,CENX,Metals & Mining
+Basic Materials,ZEUS,Metals & Mining
+Basic Materials,ATI,Metals & Mining
+Basic Materials,KALU,Metals & Mining
+Basic Materials,WOR,Metals & Mining
+Basic Materials,VMC,Construction Materials
+Basic Materials,MLM,Construction Materials
+Basic Materials,SUM,Construction Materials
+Basic Materials,USCR,Construction Materials
+Basic Materials,USLM,Construction Materials
+Basic Materials,CRH,Construction Materials
+Basic Materials,MTX,Construction Materials
+Basic Materials,CTVA,Agricultural Chemicals & Fertilizers
+Basic Materials,CF,Agricultural Chemicals & Fertilizers
+Basic Materials,MOS,Agricultural Chemicals & Fertilizers
+Basic Materials,NTR,Agricultural Chemicals & Fertilizers
+Basic Materials,SMG,Agricultural Chemicals & Fertilizers
+Basic Materials,IPI,Agricultural Chemicals & Fertilizers
+Basic Materials,PKG,Paper & Packaging
+Basic Materials,IP,Paper & Packaging
+Basic Materials,WRK,Paper & Packaging
+Basic Materials,AMCR,Paper & Packaging
+Basic Materials,CCK,Paper & Packaging
+Basic Materials,BALL,Paper & Packaging
+Basic Materials,AVY,Paper & Packaging
+Basic Materials,GPK,Paper & Packaging
+Basic Materials,SON,Paper & Packaging
+Basic Materials,SLVM,Paper & Packaging
+Basic Materials,TMST,Steel
