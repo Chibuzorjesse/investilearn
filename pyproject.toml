@@ -16,6 +16,7 @@ dependencies = [
     "numpy>=1.24.0",
     "yfinance>=0.2.0",
     "requests>=2.31.0",
+    "ollama>=0.6.1",
 ]
 
 [project.optional-dependencies]

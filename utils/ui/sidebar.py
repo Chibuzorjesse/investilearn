@@ -2,10 +2,15 @@
 
 import streamlit as st
 
+from utils.ui.coach import render_coach_chat
 
-def render_sidebar() -> tuple[bool, str]:
+
+def render_sidebar(company_context: dict | None = None) -> tuple[bool, str]:
     """
     Render sidebar with settings and AI controls
+
+    Args:
+        company_context: Optional context about current company being viewed
 
     Returns:
         Tuple of (ai_enabled, confidence_level)
@@ -78,12 +83,17 @@ def render_sidebar() -> tuple[bool, str]:
         )
 
         if ai_enabled:
+            # Show LLM coach chat interface
+            render_coach_chat(company_context=company_context)
+
+            st.markdown("---")
+
+            # Quick tips for static content
             st.markdown(
                 """
-                **How to use:**
-                - Click ❓ next to any metric
-                - Get instant explanations
-                - Ask follow-up questions (coming soon)
+                **Quick Tips:**
+                - Click ❓ next to any metric for explanations
+                - Use the chat above for detailed questions
 
                 **Confidence Indicators:**
                 - <span class="confidence-high">🟢 High</span>:
