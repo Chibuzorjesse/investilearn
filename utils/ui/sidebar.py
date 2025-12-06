@@ -27,6 +27,20 @@ def render_sidebar() -> tuple[bool, str]:
                 "No personal data is collected."
             )
 
+            # ML models toggle
+            use_ml_ranking = st.checkbox(
+                "Use advanced ML models",
+                value=True,
+                help=(
+                    "Enable Hugging Face models for semantic similarity "
+                    "and sentiment analysis (requires transformers package)"
+                ),
+            )
+            st.session_state.use_ml_ranking = use_ml_ranking
+
+            if use_ml_ranking:
+                st.caption("🧠 Using sentence embeddings & FinBERT sentiment analysis")
+
             confidence_level = st.select_slider(
                 "AI confidence threshold",
                 options=["Show all", "Medium+", "High only"],

@@ -113,12 +113,12 @@ def get_news(ticker, max_items=10):
                 "title": content.get("title", "No title available"),
                 "summary": content.get("summary") or content.get("description", ""),
                 "link": (
-                    content.get("clickThroughUrl", {}).get("url")
-                    or content.get("canonicalUrl", {}).get("url")
+                    (content.get("clickThroughUrl") or {}).get("url")
+                    or (content.get("canonicalUrl") or {}).get("url")
                     or content.get("link", "#")
                 ),
                 "publisher": (
-                    content.get("provider", {}).get("displayName")
+                    (content.get("provider") or {}).get("displayName")
                     or content.get("publisher", "Unknown source")
                 ),
                 "providerPublishTime": None,  # Will parse pubDate

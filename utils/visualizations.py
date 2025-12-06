@@ -683,20 +683,64 @@ def create_balance_sankey(data):
 
         # Current Assets (LEFT - will flow right)
         current_asset_components = []
+        receivables_components = []  # Track receivables breakdown
+
         if current_assets_key and current_assets > 0:
+            # First, check if we have the receivables hierarchy
+            has_total_receivables = "Receivables" in items
+            has_accounts_receivable = "Accounts Receivable" in items
+            has_other_receivables = "Other Receivables" in items
+
             # Pattern matching for current asset components
             current_asset_patterns = {
                 "Cash And Cash Equivalents": "cash",
                 "Cash": "cash",
                 "Cash Equivalents": "cash",
-                "Accounts Receivable": "receivables",
-                "Receivables": "receivables",
-                "Net Receivables": "receivables",
                 "Inventory": "inventory",
                 "Gross Inventory": "inventory",
                 "Marketable Securities": "cash",
                 "Short Term Investments": "cash",
             }
+
+            # Handle receivables hierarchy
+            if has_total_receivables:
+                # If we have total receivables, that becomes the component
+                if has_accounts_receivable or has_other_receivables:
+                    # We have breakdown - Receivables is parent
+                    receivables_value = items["Receivables"]
+                    if receivables_value > 0 and receivables_value / total_assets > 0.03:
+                        current_asset_components.append(
+                            ("Receivables", receivables_value, "receivables")
+                        )
+                        excluded.add("Receivables")
+
+                        # Add sub-components
+                        if has_accounts_receivable and items["Accounts Receivable"] > 0:
+                            receivables_components.append(
+                                ("Accounts Receivable", items["Accounts Receivable"])
+                            )
+                            excluded.add("Accounts Receivable")
+                        if has_other_receivables and items["Other Receivables"] > 0:
+                            receivables_components.append(
+                                ("Other Receivables", items["Other Receivables"])
+                            )
+                            excluded.add("Other Receivables")
+                else:
+                    # Just total receivables
+                    receivables_value = items["Receivables"]
+                    if receivables_value > 0 and receivables_value / total_assets > 0.03:
+                        current_asset_components.append(
+                            ("Receivables", receivables_value, "receivables")
+                        )
+                        excluded.add("Receivables")
+            elif has_accounts_receivable:
+                # No total, just use Accounts Receivable
+                ar_value = items["Accounts Receivable"]
+                if ar_value > 0 and ar_value / total_assets > 0.03:
+                    current_asset_components.append(
+                        ("Accounts Receivable", ar_value, "receivables")
+                    )
+                    excluded.add("Accounts Receivable")
 
             for pattern, color_type in current_asset_patterns.items():
                 if pattern in items and pattern not in excluded:
@@ -705,7 +749,7 @@ def create_balance_sankey(data):
                         current_asset_components.append((pattern, value, color_type))
                         excluded.add(pattern)
 
-            # Add component nodes
+            # Add component nodes (leftmost column)
             y_pos = asset_y_start
             for pattern, _, color_type in current_asset_components:
                 nodes.append(pattern)
@@ -715,7 +759,28 @@ def create_balance_sankey(data):
                 node_map[pattern] = len(nodes) - 1
                 y_pos += 0.12
 
-            # Add Current Assets category node
+            # If we have receivables breakdown, add sub-component nodes
+            if receivables_components:
+                # Add AR and Other Receivables at the far left
+                sub_y_pos = node_y[node_map.get("Receivables", 0)]
+                for sub_pattern, sub_value in receivables_components:
+                    nodes.append(sub_pattern)
+                    node_colors.append(colors["receivables"])
+                    node_x.append(0.005)  # Even further left
+                    node_y.append(sub_y_pos)
+                    node_map[sub_pattern] = len(nodes) - 1
+                    sub_y_pos += 0.06
+
+                    # Flow from sub-component to Receivables
+                    flows.append(
+                        (
+                            node_map[sub_pattern],
+                            node_map["Receivables"],
+                            sub_value,
+                        )
+                    )
+
+            # Add Current Assets category node (middle column)
             nodes.append(current_assets_key)
             node_colors.append(colors["current_assets"])
             node_x.append(0.25)
@@ -725,7 +790,13 @@ def create_balance_sankey(data):
             # Create flows from components to category
             for pattern, value, _ in current_asset_components:
                 if pattern in node_map:
-                    flows.append((node_map[pattern], node_map[current_assets_key], value))
+                    flows.append(
+                        (
+                            node_map[pattern],
+                            node_map[current_assets_key],
+                            value,
+                        )
+                    )
 
             asset_y_start = y_pos + 0.05
 

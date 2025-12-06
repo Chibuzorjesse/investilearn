@@ -4,20 +4,61 @@ import logging
 from datetime import datetime
 from typing import Any
 
+try:
+    import numpy as np
+    from sentence_transformers import SentenceTransformer
+    from transformers import pipeline
+
+    HF_AVAILABLE = True
+except ImportError:
+    HF_AVAILABLE = False
+    np = None  # type: ignore
+    logging.warning(
+        "Hugging Face models not available. "
+        "Install with: pip install transformers sentence-transformers torch"
+    )
+
 logger = logging.getLogger(__name__)
 
 
 class NewsRecommender:
     """AI-powered news recommender with relevance scoring and ranking"""
 
-    def __init__(self):
-        """Initialize the news recommender"""
+    def __init__(self, use_ml: bool = True):
+        """Initialize the news recommender
+
+        Args:
+            use_ml: Use ML models if available (default True)
+        """
+        self.use_ml = use_ml and HF_AVAILABLE
+
+        # Initialize ML models if available
+        self.embedding_model = None
+        self.sentiment_analyzer = None
+
+        if self.use_ml:
+            try:
+                logger.info("Loading ML models for news analysis...")
+                # Lightweight sentence transformer for semantic similarity
+                self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+                # Financial sentiment analysis
+                self.sentiment_analyzer = pipeline(
+                    "sentiment-analysis",
+                    model="ProsusAI/finbert",
+                    device=-1,  # CPU
+                )
+                logger.info("ML models loaded successfully")
+            except Exception as e:
+                logger.warning(f"Failed to load ML models: {e}")
+                self.use_ml = False
+
         self.relevance_weights = {
-            "title_match": 0.3,
-            "content_relevance": 0.25,
-            "recency": 0.2,
-            "source_credibility": 0.15,
-            "sentiment_balance": 0.1,
+            "title_match": 0.25 if self.use_ml else 0.3,
+            "content_relevance": 0.20 if self.use_ml else 0.25,
+            "semantic_similarity": 0.20 if self.use_ml else 0.0,
+            "ml_sentiment": 0.15 if self.use_ml else 0.0,
+            "recency": 0.15 if self.use_ml else 0.2,
+            "source_credibility": 0.05 if self.use_ml else 0.15,
         }
 
         # Trusted financial news sources
@@ -130,25 +171,118 @@ class NewsRecommender:
         scores["content_relevance"] = content_score
         explanations["content"] = self._get_content_explanation(title, summary, user_context)
 
-        # 3. Recency score
+        # 3. ML-based semantic similarity (if available)
+        if self.use_ml:
+            semantic_score = self._calculate_semantic_similarity(
+                ticker, company_name, title, summary
+            )
+            scores["semantic_similarity"] = semantic_score
+            explanations["semantic"] = self._get_semantic_explanation(semantic_score)
+
+        # 4. ML-based sentiment analysis (if available)
+        if self.use_ml:
+            ml_sentiment_score = self._calculate_ml_sentiment(title, summary)
+            scores["ml_sentiment"] = ml_sentiment_score
+            explanations["ml_sentiment"] = self._get_ml_sentiment_explanation(ml_sentiment_score)
+
+        # 5. Recency score
         recency_score = self._calculate_recency_score(published_time)
         scores["recency"] = recency_score
         explanations["recency"] = self._get_recency_explanation(published_time)
 
-        # 4. Source credibility
+        # 6. Source credibility
         credibility_score = self._calculate_source_credibility(publisher)
         scores["source_credibility"] = credibility_score
         explanations["source"] = f"Source: {publisher} (credibility: {credibility_score:.0%})"
 
-        # 5. Sentiment balance (avoid extreme bias)
-        sentiment_score = self._calculate_sentiment_balance(title, summary)
-        scores["sentiment_balance"] = sentiment_score
-        explanations["sentiment"] = self._get_sentiment_explanation(sentiment_score)
-
         # Calculate weighted total
-        total_score = sum(scores[key] * self.relevance_weights[key] for key in scores.keys())
+        total_score = sum(
+            scores[key] * self.relevance_weights.get(key, 0.0) for key in scores.keys()
+        )
 
         return total_score, explanations
+
+    def _calculate_semantic_similarity(
+        self, ticker: str, company_name: str, title: str, summary: str
+    ) -> float:
+        """
+        Calculate semantic similarity using sentence embeddings
+
+        Returns similarity score between company context and article
+        """
+        if not self.use_ml or self.embedding_model is None:
+            return 0.5
+
+        try:
+            # Create company context
+            company_context = f"{company_name} {ticker} stock investment financial analysis"
+            article_text = f"{title} {summary}"
+
+            # Get embeddings
+            embeddings = self.embedding_model.encode([company_context, article_text])
+
+            # Calculate cosine similarity
+            similarity = np.dot(embeddings[0], embeddings[1]) / (
+                np.linalg.norm(embeddings[0]) * np.linalg.norm(embeddings[1])
+            )
+
+            # Normalize to 0-1 range (cosine similarity is -1 to 1)
+            normalized_score = (similarity + 1) / 2
+
+            return float(normalized_score)
+        except Exception as e:
+            logger.warning("Semantic similarity calculation failed: %s", str(e))
+            return 0.5
+
+    def _get_semantic_explanation(self, score: float) -> str:
+        """Generate explanation for semantic similarity score"""
+        if score >= 0.7:
+            return "Strong semantic relevance to company"
+        elif score >= 0.5:
+            return "Moderate semantic relevance"
+        else:
+            return "Low semantic relevance (general market news)"
+
+    def _calculate_ml_sentiment(self, title: str, summary: str) -> float:
+        """
+        Use FinBERT to analyze financial sentiment
+
+        Returns score: positive sentiment = higher, neutral = medium
+        """
+        if not self.use_ml or self.sentiment_analyzer is None:
+            return 0.5
+
+        try:
+            text = f"{title}. {summary}"[:512]  # Truncate to model limit
+
+            result = self.sentiment_analyzer(text)[0]
+            label = result["label"].lower()
+            confidence = result["score"]
+
+            # Map sentiment to score
+            if label == "positive":
+                # Positive news gets higher score
+                return 0.5 + (confidence * 0.5)
+            elif label == "negative":
+                # Negative news still valuable but lower score
+                return 0.5 - (confidence * 0.3)
+            else:  # neutral
+                # Neutral is middle ground
+                return 0.5 + (confidence * 0.2)
+        except Exception as e:
+            logger.warning("ML sentiment analysis failed: %s", str(e))
+            return 0.5
+
+    def _get_ml_sentiment_explanation(self, score: float) -> str:
+        """Generate explanation for ML sentiment score"""
+        if score >= 0.75:
+            return "Positive financial sentiment (AI)"
+        elif score >= 0.55:
+            return "Neutral to positive sentiment (AI)"
+        elif score >= 0.35:
+            return "Neutral to negative sentiment (AI)"
+        else:
+            return "Negative financial sentiment (AI)"
 
     def _calculate_content_relevance(
         self, title: str, summary: str, user_context: dict[str, Any] | None
@@ -438,6 +572,14 @@ class NewsRecommender:
         return filtered
 
 
-def get_recommender() -> NewsRecommender:
-    """Factory function to get a NewsRecommender instance"""
-    return NewsRecommender()
+def get_recommender(use_ml: bool = True) -> NewsRecommender:
+    """
+    Factory function to get a NewsRecommender instance
+
+    Args:
+        use_ml: Enable ML-powered scoring (default True if models available)
+
+    Returns:
+        NewsRecommender instance
+    """
+    return NewsRecommender(use_ml=use_ml)

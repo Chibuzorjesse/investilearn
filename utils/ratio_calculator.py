@@ -253,7 +253,7 @@ def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
     averages: dict[str, float | None] = {}
 
     # If we don't have historical data, return None for all
-    if income_stmts is None or balance_sheets is None:
+    if income_stmts is None or balance_sheets is None or income_stmts.empty or balance_sheets.empty:
         ratio_keys = [
             "ROE",
             "ROA",
@@ -281,18 +281,51 @@ def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
         historical_ratios = []
         num_periods = min(len(income_stmts.columns), len(balance_sheets.columns))
 
+        # Debug: Check if we have enough periods
+        if num_periods < 1:
+            for key in [
+                "ROE",
+                "ROA",
+                "Net Profit Margin",
+                "Gross Profit Margin",
+                "Current Ratio",
+                "Quick Ratio",
+                "Asset Turnover",
+                "Inventory Turnover",
+                "Days Sales Outstanding",
+                "Debt to Equity",
+                "Interest Coverage",
+                "Debt Ratio",
+                "P/E Ratio",
+                "P/B Ratio",
+                "PEG Ratio",
+                "Price to Sales",
+            ]:
+                averages[key] = None
+            return averages
+
         for i in range(num_periods):
             period_ratios = {}
             income_data = income_stmts.iloc[:, i]
             balance_data = balance_sheets.iloc[:, i]
 
-            # Profitability ratios
+            # Get all needed data points
             net_income = income_data.get("Net Income", None)
             total_revenue = income_data.get("Total Revenue", None)
             gross_profit = income_data.get("Gross Profit", None)
+            cogs = income_data.get("Cost Of Revenue", None)
+            ebit = income_data.get("EBIT", None)
+            interest_expense = income_data.get("Interest Expense", None)
+
             total_assets = balance_data.get("Total Assets", None)
             stockholder_equity = balance_data.get("Stockholders Equity", None)
+            current_assets = balance_data.get("Current Assets", None)
+            current_liabilities = balance_data.get("Current Liabilities", None)
+            inventory = balance_data.get("Inventory", None)
+            accounts_receivable = balance_data.get("Accounts Receivable", None)
+            total_debt = balance_data.get("Total Debt", None)
 
+            # Profitability ratios
             if (
                 net_income is not None
                 and stockholder_equity is not None
@@ -310,9 +343,6 @@ def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
                 period_ratios["Gross Profit Margin"] = (gross_profit / total_revenue) * 100
 
             # Liquidity ratios
-            current_assets = balance_data.get("Current Assets", None)
-            current_liabilities = balance_data.get("Current Liabilities", None)
-
             if (
                 current_assets is not None
                 and current_liabilities is not None
@@ -320,9 +350,43 @@ def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
             ):
                 period_ratios["Current Ratio"] = current_assets / current_liabilities
 
+                # Quick Ratio calculation
+                if inventory is not None:
+                    quick_assets = current_assets - inventory
+                    period_ratios["Quick Ratio"] = quick_assets / current_liabilities
+                else:
+                    # Estimate if inventory not available
+                    period_ratios["Quick Ratio"] = current_assets / current_liabilities * 0.8
+
+            # Efficiency ratios
+            if total_revenue is not None and total_assets is not None and total_assets != 0:
+                period_ratios["Asset Turnover"] = total_revenue / total_assets
+
+            if cogs is not None and inventory is not None and inventory != 0:
+                period_ratios["Inventory Turnover"] = cogs / inventory
+
+            if accounts_receivable is not None and total_revenue is not None and total_revenue != 0:
+                period_ratios["Days Sales Outstanding"] = (
+                    accounts_receivable / total_revenue
+                ) * 365
+
+            # Leverage ratios
+            if (
+                total_debt is not None
+                and stockholder_equity is not None
+                and stockholder_equity != 0
+            ):
+                period_ratios["Debt to Equity"] = total_debt / stockholder_equity
+
+            if ebit is not None and interest_expense is not None and interest_expense != 0:
+                period_ratios["Interest Coverage"] = ebit / abs(interest_expense)
+
+            if total_debt is not None and total_assets is not None and total_assets != 0:
+                period_ratios["Debt Ratio"] = total_debt / total_assets
+
             historical_ratios.append(period_ratios)
 
-        # Calculate averages
+        # Calculate averages for all ratios
         all_ratio_keys = [
             "ROE",
             "ROA",
@@ -330,17 +394,43 @@ def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
             "Gross Profit Margin",
             "Current Ratio",
             "Quick Ratio",
+            "Asset Turnover",
+            "Inventory Turnover",
+            "Days Sales Outstanding",
+            "Debt to Equity",
+            "Interest Coverage",
+            "Debt Ratio",
         ]
 
+        import math
+
         for key in all_ratio_keys:
-            values = [r[key] for r in historical_ratios if key in r and r[key] is not None]
+            values = [
+                r[key]
+                for r in historical_ratios
+                if key in r
+                and r[key] is not None
+                and not (isinstance(r[key], float) and math.isnan(r[key]))
+            ]
             if values:
                 averages[key] = sum(values) / len(values)
             else:
                 averages[key] = None
 
-        # Ratios we can't easily calculate 5yr avg for (need more data)
+        # Valuation ratios - these need market data which changes daily
+        # Can't calculate meaningful 5-year averages from historical statements
+        for key in ["P/E Ratio", "P/B Ratio", "PEG Ratio", "Price to Sales"]:
+            averages[key] = None
+
+    except Exception:
+        # If anything goes wrong, return None for all
         for key in [
+            "ROE",
+            "ROA",
+            "Net Profit Margin",
+            "Gross Profit Margin",
+            "Current Ratio",
+            "Quick Ratio",
             "Asset Turnover",
             "Inventory Turnover",
             "Days Sales Outstanding",
@@ -352,11 +442,6 @@ def calculate_5yr_average(info, income_stmts=None, balance_sheets=None):
             "PEG Ratio",
             "Price to Sales",
         ]:
-            averages[key] = None
-
-    except Exception:
-        # If anything goes wrong, return None for all
-        for key in all_ratio_keys:
             averages[key] = None
 
     return averages
@@ -529,6 +614,7 @@ def _fetch_sector_peer_data(sector):
                 net_income = income.iloc[:, 0].get("Net Income")
                 revenue = income.iloc[:, 0].get("Total Revenue")
                 gross_profit = income.iloc[:, 0].get("Gross Profit")
+                cogs = income.iloc[:, 0].get("Cost Of Revenue")
                 ebit = income.iloc[:, 0].get("EBIT")
                 interest_expense = income.iloc[:, 0].get("Interest Expense")
                 equity = balance.iloc[:, 0].get("Stockholders Equity")
@@ -537,6 +623,7 @@ def _fetch_sector_peer_data(sector):
                 current_assets = balance.iloc[:, 0].get("Current Assets")
                 current_liabilities = balance.iloc[:, 0].get("Current Liabilities")
                 inventory = balance.iloc[:, 0].get("Inventory")
+                accounts_receivable = balance.iloc[:, 0].get("Accounts Receivable")
 
                 # Calculate ROE
                 if net_income is not None and equity is not None and equity != 0:
@@ -553,6 +640,17 @@ def _fetch_sector_peer_data(sector):
                 # Calculate Gross Profit Margin
                 if gross_profit is not None and revenue is not None and revenue != 0:
                     record["Gross Profit Margin"] = (gross_profit / revenue) * 100
+
+                # Efficiency Ratios
+                if revenue is not None and total_assets is not None and total_assets != 0:
+                    record["Asset Turnover"] = revenue / total_assets
+
+                if cogs is not None and inventory is not None and inventory != 0:
+                    record["Inventory Turnover"] = cogs / inventory
+
+                if accounts_receivable is not None and revenue is not None and revenue != 0:
+                    # DSO = (Accounts Receivable / Revenue) * 365
+                    record["Days Sales Outstanding"] = (accounts_receivable / revenue) * 365
 
                 # Calculate Interest Coverage
                 if ebit is not None and interest_expense is not None and interest_expense != 0:
@@ -607,6 +705,11 @@ def _map_ratio_name_to_column(ratio_name):
         # Liquidity
         "Current Ratio": "Current Ratio",
         "Quick Ratio": "Quick Ratio",
+        # Efficiency
+        "Asset Turnover": "Asset Turnover",
+        "Inventory Turnover": "Inventory Turnover",
+        "Days Sales Outstanding": "Days Sales Outstanding",
+        "DSO": "Days Sales Outstanding",
         # Leverage
         "Debt to Equity": "Debt to Equity",
         "Debt-to-Equity": "Debt to Equity",
