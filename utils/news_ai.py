@@ -115,9 +115,12 @@ class NewsRecommender:
                 )
                 item["ai_score"] = score
                 item["ai_explanation"] = explanation
-                item["ai_confidence"] = self._calculate_confidence(score, item)
                 # Store raw ML scores for display
                 item["ml_details"] = ml_details
+                # Calculate confidence using all scores and ML details
+                item["ai_confidence"] = self._calculate_confidence(
+                    score, item, ml_details
+                )
                 scored_items.append(item)
             except Exception as e:
                 logger.warning(f"Error scoring article: {e}")
@@ -529,24 +532,103 @@ class NewsRecommender:
         else:
             return "Strong sentiment (consider multiple sources)"
 
-    def _calculate_confidence(self, score: float, article: dict[str, Any]) -> str:
+    def _calculate_confidence(
+        self, score: float, article: dict[str, Any], ml_details: dict[str, Any]
+    ) -> str:
         """
-        Calculate confidence level for the recommendation
+        Calculate confidence level for the recommendation based on all scoring factors
+
+        Considers:
+        - Overall score
+        - Source credibility
+        - Article completeness (has summary)
+        - ML model confidence (semantic similarity & sentiment confidence)
+        - Score consistency across factors
 
         Returns:
             str: 'high', 'medium', or 'low'
         """
         publisher = article.get("publisher", "")
         has_summary = bool(article.get("summary", ""))
+        source_credibility = self._calculate_source_credibility(publisher)
 
-        # High confidence: high score + credible source + has summary
-        if score >= 0.7 and self._calculate_source_credibility(publisher) >= 0.8 and has_summary:
-            return "high"
-        # Low confidence: low score or unknown source
-        elif score < 0.4 or self._calculate_source_credibility(publisher) < 0.5:
-            return "low"
+        # Start with base confidence from overall score
+        confidence_score = 0.0
+
+        # 1. Overall score contribution (40%)
+        if score >= 0.7:
+            confidence_score += 0.4
+        elif score >= 0.5:
+            confidence_score += 0.25
         else:
+            confidence_score += 0.1
+
+        # 2. Source credibility contribution (20%)
+        confidence_score += source_credibility * 0.2
+
+        # 3. Content completeness (10%)
+        if has_summary:
+            confidence_score += 0.1
+
+        # 4. ML model confidence (30% if available)
+        if ml_details and self.use_ml:
+            ml_confidence = 0.0
+
+            # Semantic similarity confidence
+            if "semantic_similarity" in ml_details:
+                semantic_score = ml_details["semantic_similarity"]["score"]
+                if semantic_score >= 0.7:
+                    ml_confidence += 0.15
+                elif semantic_score >= 0.5:
+                    ml_confidence += 0.10
+                else:
+                    ml_confidence += 0.05
+
+            # Sentiment analysis confidence
+            if "sentiment" in ml_details:
+                sentiment_conf = ml_details["sentiment"]["confidence"]
+                # High model confidence = high recommendation confidence
+                ml_confidence += sentiment_conf * 0.15
+
+            confidence_score += ml_confidence
+        else:
+            # If no ML, redistribute that 30% to other factors
+            # Boost overall score weight
+            if score >= 0.7:
+                confidence_score += 0.2
+            elif score >= 0.5:
+                confidence_score += 0.1
+
+        # 5. Score consistency check (bonus/penalty)
+        # If we have ML details, check if scores agree
+        if ml_details and "score_breakdown" in ml_details:
+            breakdown = ml_details["score_breakdown"]
+            raw_scores = [
+                details["raw_score"] for details in breakdown.values() if details["raw_score"] > 0
+            ]
+
+            if len(raw_scores) >= 3:
+                # Calculate variance - low variance = more consistent = higher confidence
+                avg_score = sum(raw_scores) / len(raw_scores)
+                variance = sum((s - avg_score) ** 2 for s in raw_scores) / len(raw_scores)
+
+                # Low variance (< 0.05) = consistent scores = bonus
+                if variance < 0.05:
+                    confidence_score += 0.1
+                # High variance (> 0.15) = inconsistent = penalty
+                elif variance > 0.15:
+                    confidence_score -= 0.1
+
+        # Clamp to [0, 1]
+        confidence_score = max(0.0, min(1.0, confidence_score))
+
+        # Map to categories
+        if confidence_score >= 0.7:
+            return "high"
+        elif confidence_score >= 0.4:
             return "medium"
+        else:
+            return "low"
 
     def filter_by_category(
         self, news_items: list[dict[str, Any]], category: str
