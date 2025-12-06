@@ -1,7 +1,7 @@
 """Model loader and cache manager for ML models"""
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import streamlit as st
 
@@ -146,12 +146,12 @@ def preload_models_with_ui() -> None:
         st.error(f"❌ Failed to load ML models: {str(e)}")
 
 
-def get_embedding_model() -> Optional[Any]:
+def get_embedding_model() -> Any | None:
     """Get the cached embedding model"""
     return _MODEL_CACHE.get("embedding")
 
 
-def get_sentiment_model() -> Optional[Any]:
+def get_sentiment_model() -> Any | None:
     """Get the cached sentiment model"""
     return _MODEL_CACHE.get("sentiment")
 

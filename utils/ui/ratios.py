@@ -291,10 +291,10 @@ def render_ratios_section(
 
         st.markdown(f"**{ratio_display}**")
 
+        col4 = None  # Initialize for type checker
         if is_valuation:
             # For valuation: only show value and industry comparison
             col1, col2, col3 = st.columns([2, 2, 1])
-            col4 = None  # No col4 for valuation ratios
         else:
             # For others: show value, industry, and 5Y avg
             col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
@@ -346,6 +346,8 @@ def render_ratios_section(
                     st.session_state[f"guide_query_{ratio_key}"] = True
 
         if not is_valuation:
+            # col4 is guaranteed to be defined when is_valuation is False
+            assert col4 is not None  # nosec B101
             with col4:
                 # Help button for non-valuation ratios
                 help_key = f"help_{ratio_key}_{search_query}"

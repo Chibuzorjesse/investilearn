@@ -10,7 +10,7 @@ try:
     HF_AVAILABLE = True
 except ImportError:
     HF_AVAILABLE = False
-    np = None  # type: ignore
+    np = None
     logging.warning(
         "Hugging Face models not available. "
         "Install with: pip install transformers sentence-transformers torch"
