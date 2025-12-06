@@ -1,5 +1,7 @@
 """Cache warming utilities to precompute data on app startup"""
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import streamlit as st
 
 from .ratio_calculator import _get_cached_peer_data, _load_sector_tickers
@@ -9,6 +11,7 @@ from .ratio_calculator import _get_cached_peer_data, _load_sector_tickers
 def warm_sector_caches():
     """
     Precompute and cache peer data for all sectors on app startup
+    Uses parallel processing to speed up loading
 
     Returns:
         dict: Status of cache warming for each sector
@@ -16,24 +19,38 @@ def warm_sector_caches():
     sector_tickers = _load_sector_tickers()
     status = {}
 
-    with st.spinner("🔥 Warming up caches (one-time, ~30-60 seconds)..."):
+    with st.spinner("🔥 Warming up caches (one-time, ~10-20 seconds)..."):
         progress_text = "Preloading sector data for faster comparisons..."
         progress_bar = st.progress(0, text=progress_text)
 
         sectors = list(sector_tickers.keys())
         total = len(sectors)
+        completed = 0
 
-        for idx, sector in enumerate(sectors):
+        def load_sector(sector):
+            """Load a single sector's data"""
             try:
-                # This will cache the data for this sector
                 _get_cached_peer_data(sector)
-                status[sector] = "success"
+                return sector, "success"
             except Exception as e:
-                status[sector] = f"error: {str(e)}"
+                return sector, f"error: {str(e)}"
 
-            progress_bar.progress(
-                (idx + 1) / total, text=f"{progress_text} ({idx + 1}/{total} sectors)"
-            )
+        # Use ThreadPoolExecutor to parallelize sector loading
+        # max_workers=4 is a good balance for API rate limits
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            # Submit all sector loading tasks
+            future_to_sector = {executor.submit(load_sector, sector): sector for sector in sectors}
+
+            # Process completed tasks as they finish
+            for future in as_completed(future_to_sector):
+                sector, result = future.result()
+                status[sector] = result
+                completed += 1
+
+                progress_bar.progress(
+                    completed / total,
+                    text=f"{progress_text} ({completed}/{total} sectors)",
+                )
 
         progress_bar.empty()
 
