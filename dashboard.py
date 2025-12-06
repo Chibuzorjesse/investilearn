@@ -7,6 +7,7 @@ Orchestrates UI components and data flow.
 
 import streamlit as st
 
+from utils.cache_warmer import get_cache_stats, warm_sector_caches
 from utils.data_fetcher import get_financial_statements, get_stock_info
 from utils.ratio_calculator import calculate_ratios
 from utils.ui import (
@@ -51,6 +52,16 @@ if "interaction_log" not in st.session_state:
     st.session_state.interaction_log = []
 if "first_visit" not in st.session_state:
     st.session_state.first_visit = True
+
+# Precompute caches on first app load
+if "caches_warmed" not in st.session_state:
+    warm_sector_caches()
+    st.session_state.caches_warmed = True
+    cache_stats = get_cache_stats()
+    st.toast(
+        f"✅ Loaded {cache_stats['total_companies']} companies "
+        f"across {cache_stats['sectors_cached']} sectors for instant comparisons!"
+    )
 
 # Render sidebar (sets ai_enabled and confidence_level in session state)
 render_sidebar()
