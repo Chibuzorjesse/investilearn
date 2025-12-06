@@ -1,67 +1,70 @@
 """Cache warming utilities to precompute data on app startup"""
 
-import time
-import warnings
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
-from .ratio_calculator import _get_cached_peer_data, _load_sector_tickers
+from .ratio_calculator import _PEER_DATA_CACHE, _load_sector_tickers
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def warm_sector_caches():
     """
-    Precompute and cache peer data for all sectors on app startup
-    Uses parallel processing to speed up loading
+    Load pre-computed sector data from parquet files.
+    This is fast (no API calls) and loads in ~1-2 seconds.
+
+    Falls back to API calls if cached files don't exist.
+    Run scripts/refresh_data.py to update cached files.
 
     Returns:
-        dict: Status of cache warming for each sector
+        dict: Status of cache loading for each sector
     """
     sector_tickers = _load_sector_tickers()
     status = {}
 
-    with st.spinner("🔥 Warming up caches (one-time server startup, ~1-2 minutes)..."):
-        progress_text = "Preloading sector data for faster comparisons..."
+    # Path to cached sector data
+    cache_dir = Path(__file__).parent.parent / "data" / "sector_data"
+
+    with st.spinner("🚀 Loading pre-computed data..."):
+        progress_text = "Loading sector data from cache..."
         progress_bar = st.progress(0, text=progress_text)
 
         sectors = list(sector_tickers.keys())
         total = len(sectors)
         completed = 0
 
-        def load_sector(sector):
-            """Load a single sector's data with rate limiting"""
+        for sector in sectors:
             try:
-                # Add longer delay to avoid rate limiting (1 second between sectors)
-                time.sleep(1.0)
+                cache_file = cache_dir / f"{sector}.parquet"
 
-                # Suppress the ScriptRunContext warnings from threads
-                with warnings.catch_warnings():
-                    warnings.filterwarnings("ignore", message=".*ScriptRunContext.*")
-                    _get_cached_peer_data(sector)
-                return sector, "success"
+                if cache_file.exists():
+                    # Load from pre-computed cache (fast!)
+                    sector_df = pd.read_parquet(cache_file)
+                    _PEER_DATA_CACHE[sector] = sector_df
+                    status[sector] = f"loaded ({len(sector_df)} companies)"
+                else:
+                    # Cache file doesn't exist
+                    status[sector] = "no cache file - run scripts/refresh_data.py"
+
             except Exception as e:
-                # Log error but continue with other sectors
-                return sector, f"error: {str(e)}"
+                status[sector] = f"error: {str(e)}"
 
-        # Use ThreadPoolExecutor with max_workers=1 for sequential processing
-        # This avoids rate limits by ensuring only one sector loads at a time
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            # Submit all sector loading tasks
-            future_to_sector = {executor.submit(load_sector, sector): sector for sector in sectors}
-
-            # Process completed tasks as they finish
-            for future in as_completed(future_to_sector):
-                sector, result = future.result()
-                status[sector] = result
-                completed += 1
-
-                progress_bar.progress(
-                    completed / total,
-                    text=f"{progress_text} ({completed}/{total} sectors)",
-                )
+            completed += 1
+            progress_bar.progress(
+                completed / total,
+                text=f"{progress_text} ({completed}/{total} sectors)",
+            )
 
         progress_bar.empty()
+
+    # Show warning if any sectors missing cache files
+    missing = [s for s, v in status.items() if "no cache file" in v]
+    if missing:
+        st.warning(
+            f"⚠️ Missing cache files for {len(missing)} sectors. "
+            f"Run `uv run python scripts/refresh_data.py --all` to generate them."
+        )
 
     return status
 
