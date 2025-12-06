@@ -67,6 +67,24 @@ def render_news_section(search_query: str, company_name: str) -> None:
         horizontal=True,
     )
 
+    # Confidence filter for AI-ranked news
+    if use_ml:
+        st.markdown("**AI Confidence Filter:**")
+        news_confidence = st.select_slider(
+            "Show articles with confidence level:",
+            options=["Any (show all)", "Medium or higher", "High only"],
+            value="Medium or higher",
+            help="Filter news recommendations based on AI confidence",
+            key="news_confidence_filter",
+        )
+        # Map to internal values
+        news_confidence_map = {
+            "Any (show all)": "low",
+            "Medium or higher": "medium",
+            "High only": "high",
+        }
+        st.session_state.news_confidence_level = news_confidence_map[news_confidence]
+
     # AI-rank the news
     if news_items:
         ranked_news = recommender.rank_news(
@@ -100,13 +118,18 @@ def render_news_section(search_query: str, company_name: str) -> None:
 
 def _filter_by_confidence(news_items: list) -> list:
     """Filter news items by confidence level"""
-    if st.session_state.get("ai_enabled", True):
-        confidence_filter = st.session_state.get("confidence_level", "Show all")
+    if st.session_state.get("use_ml_ranking", True):
+        confidence_filter = st.session_state.get("news_confidence_level", "low")
+        confidence_levels = {"low": 0, "medium": 1, "high": 2}
+        threshold_level = confidence_levels.get(confidence_filter, 0)
 
-        if confidence_filter == "Medium+":
-            return [item for item in news_items if item.get("ai_confidence") in ["high", "medium"]]
-        elif confidence_filter == "High only":
-            return [item for item in news_items if item.get("ai_confidence") == "high"]
+        filtered = []
+        for item in news_items:
+            item_confidence = item.get("ai_confidence", "low")
+            item_level = confidence_levels.get(item_confidence, 0)
+            if item_level >= threshold_level:
+                filtered.append(item)
+        return filtered
 
     return news_items
 
@@ -114,9 +137,21 @@ def _filter_by_confidence(news_items: list) -> list:
 def _render_news_items(display_items: list) -> None:
     """Render news items with AI rankings"""
     if st.session_state.get("ai_enabled", True):
-        st.success(f"🤖 AI ranked {len(display_items)} articles by relevance")
+        use_ml = st.session_state.get("use_ml_ranking", True)
+        if use_ml:
+            st.success(f"🤖 AI ranked {len(display_items)} articles by relevance using ML models")
+        else:
+            st.info(
+                f"📊 Ranked {len(display_items)} articles using rule-based scoring (keyword matching, source credibility, recency)"
+            )
     else:
-        st.caption("📊 Showing chronological news (AI disabled)")
+        st.info(
+            f"📊 Ranked {len(display_items)} articles using rule-based scoring\n\n"
+            "Even with AI features off, news is still ranked by:\n"
+            "- Keyword relevance to company\n"
+            "- Source credibility\n"
+            "- Recency and freshness"
+        )
 
     # Create scrollable container for news items
     st.markdown(
@@ -163,17 +198,76 @@ def _render_news_items(display_items: list) -> None:
             st.caption(f"{publisher} • {date_str}")
 
             if st.session_state.get("ai_enabled", True):
-                st.caption(f"Relevance Score: {ai_score:.0%} | Confidence: {ai_confidence.title()}")
+                col_score, col_coach_btn = st.columns([3, 1])
+                with col_score:
+                    st.caption(
+                        f"Relevance Score: {ai_score:.0%} | Confidence: {ai_confidence.title()}"
+                    )
+                with col_coach_btn:
+                    ai_enabled = st.session_state.get("ai_enabled", True)
+                    llm_coach_enabled = st.session_state.get("llm_coach", True)
+                    if st.button(
+                        "💬 Ask Coach",
+                        key=f"coach_news_{idx}",
+                        use_container_width=True,
+                        disabled=not (ai_enabled and llm_coach_enabled),
+                    ):
+                        # Store article context separately for the coach
+                        st.session_state.news_article_context = {
+                            "article_title": title,
+                            "article_publisher": publisher,
+                            "article_url": link,
+                            "article_date": date_str,
+                            "article_summary": item.get("summary", ""),
+                        }
+
+                        # Create clean auto prompt (article details passed via context)
+                        st.session_state.coach_auto_prompt = (
+                            "Explain what this news article means for fundamental "
+                            "investing and what I should consider when analyzing "
+                            "this information."
+                        )
+                        st.session_state.open_coach = True
+                        st.rerun()
 
             st.markdown(f"[Read more →]({link})")
 
             with st.expander("🔍 Why is this recommended?", expanded=False):
-                if st.session_state.get("ai_enabled", True):
-                    st.markdown("**AI Explanation:**")
+                ml_details = item.get("ml_details", {})
+                use_ml = st.session_state.get("use_ml_ranking", True)
+                ai_enabled = st.session_state.get("ai_enabled", True)
 
-                    # Show ML model outputs directly if available
-                    ml_details = item.get("ml_details", {})
-                    use_ml = st.session_state.get("use_ml_ranking", True)
+                # Show score breakdown when AI is OFF or News ML is OFF
+                if not ai_enabled or not use_ml:
+                    if "score_breakdown" in ml_details:
+                        # Show detailed score breakdown
+                        breakdown = ml_details["score_breakdown"]
+                        total = 0
+                        st.markdown("**📊 Score Breakdown - How this was ranked:**")
+                        st.markdown("")
+                        for factor, details in breakdown.items():
+                            factor_name = factor.replace("_", " ").title()
+                            raw = details["raw_score"]
+                            weight = details["weight"]
+                            contribution = details["contribution"]
+                            total += contribution
+                            st.markdown(
+                                f"- **{factor_name}:** {raw:.1%} × "
+                                f"{weight:.0%} weight = **{contribution:.1%}** contribution"
+                            )
+                        st.markdown(f"\n**Final Score: {total:.1%}**")
+                        if not ai_enabled:
+                            st.caption(
+                                "📐 Using rule-based scoring (keywords, source credibility, recency)"
+                            )
+                        else:
+                            st.caption("📐 Using rule-based scoring (ML models disabled for news)")
+                    else:
+                        st.info("Score breakdown not available for this article")
+
+                elif ai_enabled and use_ml:
+                    # Show AI/ML outputs when AI features are enabled
+                    st.markdown("**AI Explanation:**")
 
                     if use_ml and ml_details:
                         st.markdown("### 🧠 ML Model Outputs")

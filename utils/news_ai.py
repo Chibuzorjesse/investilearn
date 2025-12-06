@@ -229,17 +229,16 @@ class NewsRecommender:
             scores[key] * self.relevance_weights.get(key, 0.0) for key in scores.keys()
         )
 
-        # Add score breakdown to ml_details
-        if self.use_ml:
-            ml_details["score_breakdown"] = {
-                factor: {
-                    "raw_score": scores.get(factor, 0),
-                    "weight": self.relevance_weights.get(factor, 0),
-                    "contribution": (scores.get(factor, 0) * self.relevance_weights.get(factor, 0)),
-                }
-                for factor in self.relevance_weights.keys()
-                if factor in scores
+        # Add score breakdown to ml_details (always, regardless of use_ml setting)
+        ml_details["score_breakdown"] = {
+            factor: {
+                "raw_score": scores.get(factor, 0),
+                "weight": self.relevance_weights.get(factor, 0),
+                "contribution": (scores.get(factor, 0) * self.relevance_weights.get(factor, 0)),
             }
+            for factor in self.relevance_weights.keys()
+            if factor in scores
+        }
 
         return total_score, explanations, ml_details
 
