@@ -180,12 +180,25 @@ def _get_contextual_explanation(ratio_key, value, industry_avg, yr5_avg, perform
     # Industry comparison
     if has_industry:
         ind_formatted = format_ratio_value(industry_avg, ratio_key)
+        
+        # For valuation ratios, the interpretation is reversed
+        is_valuation = ratio_key in {"P/E Ratio", "P/B Ratio", "PEG Ratio", "Price to Sales"}
+        
         if color == "#10b981":  # Green
-            parts.append(f"● Outperforming industry average ({ind_formatted})")
+            if is_valuation:
+                parts.append(f"● Below industry average ({ind_formatted}) - Undervalued")
+            else:
+                parts.append(f"● Outperforming industry average ({ind_formatted})")
         elif color == "#f59e0b":  # Yellow
-            parts.append(f"● Matching industry average ({ind_formatted})")
+            if is_valuation:
+                parts.append(f"● Near industry average ({ind_formatted}) - Fair value")
+            else:
+                parts.append(f"● Matching industry average ({ind_formatted})")
         else:  # Red
-            parts.append(f"● Below industry average ({ind_formatted})")
+            if is_valuation:
+                parts.append(f"● Above industry average ({ind_formatted}) - Overvalued")
+            else:
+                parts.append(f"● Below industry average ({ind_formatted})")
 
     # 5-year trend
     if has_5yr:
