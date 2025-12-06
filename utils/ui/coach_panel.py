@@ -168,7 +168,7 @@ def render_coach_panel(company_context: dict | None = None, auto_prompt: str | N
                     )
 
                     # Collect the full response
-                    for chunk in stream:  # type: ignore[union-attr]
+                    for chunk in stream:
                         if st.session_state.get("stop_generation", False):
                             full_response += "\n\n*[Generation stopped by user]*"
                             break
