@@ -89,17 +89,63 @@ def get_news(ticker, max_items=10):
         max_items: Maximum number of news items to return
 
     Returns:
-        list: List of news dictionaries or empty list on error
+        list: List of news dictionaries with normalized structure
     """
     try:
         stock = yf.Ticker(ticker)
         news = stock.news
 
-        if news:
-            return news[:max_items]
-        return []
+        if not news:
+            return []
+
+        # Normalize the news structure from yfinance
+        normalized_news = []
+        for item in news[:max_items]:
+            # yfinance returns nested structure: item['content'] has the actual data
+            content = item.get("content", item)  # Fallback to item if no content key
+
+            # Skip if content is None or not a dictionary
+            if not content or not isinstance(content, dict):
+                continue
+
+            # Extract and normalize fields
+            normalized = {
+                "title": content.get("title", "No title available"),
+                "summary": content.get("summary") or content.get("description", ""),
+                "link": (
+                    (content.get("clickThroughUrl") or {}).get("url")
+                    or (content.get("canonicalUrl") or {}).get("url")
+                    or content.get("link", "#")
+                ),
+                "publisher": (
+                    (content.get("provider") or {}).get("displayName")
+                    or content.get("publisher", "Unknown source")
+                ),
+                "providerPublishTime": None,  # Will parse pubDate
+            }
+
+            # Parse pubDate to timestamp
+            pub_date = content.get("pubDate") or content.get("providerPublishTime")
+            if pub_date:
+                if isinstance(pub_date, str):
+                    # Parse ISO format datetime
+                    try:
+                        from datetime import datetime
+
+                        dt = datetime.fromisoformat(pub_date.replace("Z", "+00:00"))
+                        normalized["providerPublishTime"] = int(dt.timestamp())
+                    except (ValueError, AttributeError):
+                        # Invalid date format, keep as None
+                        pass
+                elif isinstance(pub_date, int | float):
+                    normalized["providerPublishTime"] = int(pub_date)
+
+            normalized_news.append(normalized)
+
+        return normalized_news
+
     except Exception as e:
-        st.warning(f"Error fetching news: {str(e)}")
+        st.error(f"Error fetching news: {str(e)}")
         return []
 
 
