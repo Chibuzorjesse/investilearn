@@ -1,5 +1,7 @@
 """Cache warming utilities to precompute data on app startup"""
 
+import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import streamlit as st
@@ -19,7 +21,7 @@ def warm_sector_caches():
     sector_tickers = _load_sector_tickers()
     status = {}
 
-    with st.spinner("🔥 Warming up caches (one-time, ~10-20 seconds)..."):
+    with st.spinner("🔥 Warming up caches (one-time, ~20-30 seconds)..."):
         progress_text = "Preloading sector data for faster comparisons..."
         progress_bar = st.progress(0, text=progress_text)
 
@@ -28,16 +30,22 @@ def warm_sector_caches():
         completed = 0
 
         def load_sector(sector):
-            """Load a single sector's data"""
+            """Load a single sector's data with rate limiting"""
             try:
-                _get_cached_peer_data(sector)
+                # Add delay to avoid rate limiting (250ms between requests)
+                time.sleep(0.25)
+
+                # Suppress the ScriptRunContext warnings from threads
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", message=".*ScriptRunContext.*")
+                    _get_cached_peer_data(sector)
                 return sector, "success"
             except Exception as e:
                 return sector, f"error: {str(e)}"
 
-        # Use ThreadPoolExecutor to parallelize sector loading
-        # max_workers=4 is a good balance for API rate limits
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        # Use ThreadPoolExecutor with reduced parallelism to avoid rate limits
+        # max_workers=2 reduces API call rate while still providing speedup
+        with ThreadPoolExecutor(max_workers=2) as executor:
             # Submit all sector loading tasks
             future_to_sector = {executor.submit(load_sector, sector): sector for sector in sectors}
 
