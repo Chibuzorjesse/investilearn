@@ -235,36 +235,22 @@ def _render_news_items(display_items: list) -> None:
                             "🟢 High confidence based on: strong relevance "
                             "score, credible source, complete article"
                         ),
-                        "medium": (
-                            "🟡 Medium confidence - some factors may be "
-                            "uncertain"
-                        ),
-                        "low": (
-                            "🔴 Low confidence - limited information or "
-                            "weak signals"
-                        ),
+                        "medium": ("🟡 Medium confidence - some factors may be " "uncertain"),
+                        "low": ("🔴 Low confidence - limited information or " "weak signals"),
                     }
                     if use_ml and ml_details:
                         # Enhanced explanation with ML factors
                         ml_conf_factors = []
                         if "semantic_similarity" in ml_details:
-                            sem_score = ml_details["semantic_similarity"][
-                                "score"
-                            ]
+                            sem_score = ml_details["semantic_similarity"]["score"]
                             if sem_score >= 0.7:
-                                ml_conf_factors.append(
-                                    "strong semantic match"
-                                )
+                                ml_conf_factors.append("strong semantic match")
                             elif sem_score >= 0.5:
-                                ml_conf_factors.append(
-                                    "moderate semantic match"
-                                )
+                                ml_conf_factors.append("moderate semantic match")
                         if "sentiment" in ml_details:
                             sent_conf = ml_details["sentiment"]["confidence"]
                             if sent_conf >= 0.8:
-                                ml_conf_factors.append(
-                                    "high sentiment confidence"
-                                )
+                                ml_conf_factors.append("high sentiment confidence")
 
                         if ml_conf_factors:
                             st.caption(
@@ -272,15 +258,9 @@ def _render_news_items(display_items: list) -> None:
                                 f"+ {', '.join(ml_conf_factors)}"
                             )
                         else:
-                            st.caption(
-                                confidence_explanations.get(
-                                    ai_confidence, ""
-                                )
-                            )
+                            st.caption(confidence_explanations.get(ai_confidence, ""))
                     else:
-                        st.caption(
-                            confidence_explanations.get(ai_confidence, "")
-                        )
+                        st.caption(confidence_explanations.get(ai_confidence, ""))
 
                     st.markdown("---")
 

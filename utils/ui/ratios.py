@@ -180,10 +180,10 @@ def _get_contextual_explanation(ratio_key, value, industry_avg, yr5_avg, perform
     # Industry comparison
     if has_industry:
         ind_formatted = format_ratio_value(industry_avg, ratio_key)
-        
+
         # For valuation ratios, the interpretation is reversed
         is_valuation = ratio_key in {"P/E Ratio", "P/B Ratio", "PEG Ratio", "Price to Sales"}
-        
+
         if color == "#10b981":  # Green
             if is_valuation:
                 parts.append(f"● Below industry average ({ind_formatted}) - Undervalued")

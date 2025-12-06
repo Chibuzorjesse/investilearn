@@ -118,9 +118,7 @@ class NewsRecommender:
                 # Store raw ML scores for display
                 item["ml_details"] = ml_details
                 # Calculate confidence using all scores and ML details
-                item["ai_confidence"] = self._calculate_confidence(
-                    score, item, ml_details
-                )
+                item["ai_confidence"] = self._calculate_confidence(score, item, ml_details)
                 scored_items.append(item)
             except Exception as e:
                 logger.warning(f"Error scoring article: {e}")
