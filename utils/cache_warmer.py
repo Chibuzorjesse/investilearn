@@ -21,7 +21,7 @@ def warm_sector_caches():
     sector_tickers = _load_sector_tickers()
     status = {}
 
-    with st.spinner("🔥 Warming up caches (one-time, ~20-30 seconds)..."):
+    with st.spinner("🔥 Warming up caches (one-time server startup, ~1-2 minutes)..."):
         progress_text = "Preloading sector data for faster comparisons..."
         progress_bar = st.progress(0, text=progress_text)
 
@@ -32,8 +32,8 @@ def warm_sector_caches():
         def load_sector(sector):
             """Load a single sector's data with rate limiting"""
             try:
-                # Add delay to avoid rate limiting (250ms between requests)
-                time.sleep(0.25)
+                # Add longer delay to avoid rate limiting (1 second between sectors)
+                time.sleep(1.0)
 
                 # Suppress the ScriptRunContext warnings from threads
                 with warnings.catch_warnings():
@@ -41,11 +41,12 @@ def warm_sector_caches():
                     _get_cached_peer_data(sector)
                 return sector, "success"
             except Exception as e:
+                # Log error but continue with other sectors
                 return sector, f"error: {str(e)}"
 
-        # Use ThreadPoolExecutor with reduced parallelism to avoid rate limits
-        # max_workers=2 reduces API call rate while still providing speedup
-        with ThreadPoolExecutor(max_workers=2) as executor:
+        # Use ThreadPoolExecutor with max_workers=1 for sequential processing
+        # This avoids rate limits by ensuring only one sector loads at a time
+        with ThreadPoolExecutor(max_workers=1) as executor:
             # Submit all sector loading tasks
             future_to_sector = {executor.submit(load_sector, sector): sector for sector in sectors}
 

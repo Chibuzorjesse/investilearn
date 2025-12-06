@@ -52,11 +52,9 @@ if "interaction_log" not in st.session_state:
     st.session_state.interaction_log = []
 if "first_visit" not in st.session_state:
     st.session_state.first_visit = True
-if "enable_cache_warming" not in st.session_state:
-    st.session_state.enable_cache_warming = False  # Disabled by default
 
-# Precompute caches on first app load (optional - can cause rate limiting)
-if st.session_state.get("enable_cache_warming", False) and "caches_warmed" not in st.session_state:
+# Precompute caches on first app load (simulates server startup)
+if "caches_warmed" not in st.session_state:
     warm_sector_caches()
     st.session_state.caches_warmed = True
     cache_stats = get_cache_stats()
