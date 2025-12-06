@@ -17,6 +17,28 @@ def render_company_header(info: dict, search_query: str) -> str:
     company_name: str = info.get("longName", search_query)
     st.markdown("---")
 
+    # Add CSS to enable text wrapping in metric labels and values
+    st.markdown(
+        """
+        <style>
+        /* Force text wrapping for all metric components */
+        [data-testid="stMetricLabel"],
+        [data-testid="stMetricLabel"] *,
+        [data-testid="stMetricValue"],
+        [data-testid="stMetricValue"] *,
+        [data-testid="stMetricDelta"],
+        [data-testid="stMetricDelta"] * {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            text-overflow: clip !important;
+            overflow: visible !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     col_header1, col_header2, col_header3, col_header4 = st.columns(4)
 
     with col_header1:

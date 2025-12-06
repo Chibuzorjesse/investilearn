@@ -86,7 +86,8 @@ class InvestmentCoach:
         question: str,
         context: dict[str, Any] | None = None,
         conversation_history: list[dict[str, str]] | None = None,
-    ) -> dict[str, Any]:
+        stream: bool = False,
+    ) -> dict[str, Any] | Any:
         """
         Ask the coach a question with optional context
 
@@ -94,9 +95,11 @@ class InvestmentCoach:
             question: User's question
             context: Optional context (company data, ratios, etc.)
             conversation_history: Previous messages for context
+            stream: If True, return streaming generator
 
         Returns:
             Dictionary with response, confidence, and metadata
+            OR generator if stream=True
         """
         available, message = self.check_availability()
         if not available:
@@ -118,8 +121,23 @@ class InvestmentCoach:
 
             messages.append({"role": "user", "content": user_message})
 
-            # Call Ollama with streaming disabled for simplicity
+            # Call Ollama
             assert ollama is not None  # Type narrowing  # nosec B101
+
+            if stream:
+                # Return streaming generator
+                return ollama.chat(
+                    model=self.model,
+                    messages=messages,
+                    stream=True,
+                    options={
+                        "temperature": 0.7,
+                        "top_p": 0.9,
+                        "num_predict": 500,
+                    },
+                )
+
+            # Non-streaming response
             response = ollama.chat(
                 model=self.model,
                 messages=messages,
@@ -172,13 +190,54 @@ class InvestmentCoach:
         if "sector" in context:
             parts.append(f"- Sector: {context['sector']}")
 
+        # Add market data
+        if "market_cap" in context and context["market_cap"] != "N/A":
+            parts.append(f"- Market Cap: {context['market_cap']}")
+        if "current_price" in context and context["current_price"] != "N/A":
+            parts.append(f"- Current Price: ${context['current_price']}")
+        if "pe_ratio" in context and context["pe_ratio"] != "N/A":
+            parts.append(f"- P/E Ratio: {context['pe_ratio']}")
+        if "pb_ratio" in context and context["pb_ratio"] != "N/A":
+            parts.append(f"- P/B Ratio: {context['pb_ratio']}")
+        if "dividend_yield" in context and context["dividend_yield"] != "N/A":
+            parts.append(f"- Dividend Yield: {context['dividend_yield']:.2%}")
+        if "beta" in context and context["beta"] != "N/A":
+            parts.append(f"- Beta: {context['beta']}")
+
+        # Add key ratios if available
+        if "ratios" in context and context["ratios"]:
+            parts.append("\nKey Financial Ratios:")
+            ratios = context["ratios"]
+            if "ROE" in ratios and ratios["ROE"]:
+                parts.append(f"- ROE: {ratios['ROE']:.2f}%")
+            if "ROA" in ratios and ratios["ROA"]:
+                parts.append(f"- ROA: {ratios['ROA']:.2f}%")
+            if "Current Ratio" in ratios and ratios["Current Ratio"]:
+                parts.append(f"- Current Ratio: {ratios['Current Ratio']:.2f}")
+            if "Debt to Equity" in ratios and ratios["Debt to Equity"]:
+                parts.append(f"- Debt to Equity: {ratios['Debt to Equity']:.2f}")
+
         # Add specific metric if provided
         if "metric_name" in context and "metric_value" in context:
+            parts.append("\nSpecific metric question:")
             parts.append(f"- {context['metric_name']}: {context['metric_value']}")
 
         # Add industry comparison if available
         if "industry_avg" in context:
             parts.append(f"- Industry average: {context['industry_avg']}")
+
+        # Add article context if provided (from news)
+        if "article_title" in context:
+            parts.append("\nNews Article Context:")
+            parts.append(f"- Title: {context['article_title']}")
+            if "article_publisher" in context:
+                parts.append(f"- Publisher: {context['article_publisher']}")
+            if "article_date" in context:
+                parts.append(f"- Date: {context['article_date']}")
+            if "article_summary" in context and context["article_summary"]:
+                parts.append(f"- Summary: {context['article_summary']}")
+            if "article_url" in context:
+                parts.append(f"- URL: {context['article_url']}")
 
         return "\n".join(parts)
 

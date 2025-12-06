@@ -342,8 +342,28 @@ def render_ratios_section(
             else:
                 # Help button for valuation ratios
                 help_key = f"help_{ratio_key}_{search_query}"
-                if st.button("❓", key=help_key, help="Learn more"):
-                    st.session_state[f"guide_query_{ratio_key}"] = True
+                ai_enabled = st.session_state.get("ai_enabled", True)
+                llm_coach_enabled = st.session_state.get("llm_coach", True)
+                if st.button(
+                    "❓",
+                    key=help_key,
+                    help="Ask coach about this metric",
+                    disabled=not (ai_enabled and llm_coach_enabled),
+                ):
+                    # Store metric info in session state to trigger coach
+                    st.session_state.ask_coach_metric = {
+                        "name": ratio_display,
+                        "value": formatted_value,
+                        "company": company_name,
+                        "ticker": search_query,
+                        "sector": info.get("sector", "Unknown"),
+                        "industry_avg": (
+                            format_ratio_value(industry_avg, ratio_key)
+                            if industry_avg is not None
+                            else None
+                        ),
+                    }
+                    st.rerun()
 
         if not is_valuation:
             # col4 is guaranteed to be defined when is_valuation is False
@@ -351,24 +371,41 @@ def render_ratios_section(
             with col4:
                 # Help button for non-valuation ratios
                 help_key = f"help_{ratio_key}_{search_query}"
-                if st.button("❓", key=help_key, help="Learn more"):
-                    st.session_state[f"guide_query_{ratio_key}"] = True
+                ai_enabled = st.session_state.get("ai_enabled", True)
+                llm_coach_enabled = st.session_state.get("llm_coach", True)
+                if st.button(
+                    "❓",
+                    key=help_key,
+                    help="Ask coach about this metric",
+                    disabled=not (ai_enabled and llm_coach_enabled),
+                ):
+                    # Store metric info in session state to trigger coach
+                    st.session_state.ask_coach_metric = {
+                        "name": ratio_display,
+                        "value": formatted_value,
+                        "company": company_name,
+                        "ticker": search_query,
+                        "sector": info.get("sector", "Unknown"),
+                        "industry_avg": (
+                            format_ratio_value(industry_avg, ratio_key)
+                            if industry_avg is not None
+                            else None
+                        ),
+                    }
+                    st.rerun()
 
-        # Add contextual explanation
+        # Add contextual explanation in expander for cleaner UI
         explanation = _get_contextual_explanation(
             ratio_key, value, industry_avg, yr5_avg, performance_indicator
         )
         if explanation:
-            st.markdown(
-                f'<div style="font-size:0.9em; color:#888; line-height:1.6;">{explanation}</div>',
-                unsafe_allow_html=True,
-            )
-            st.caption("💡 Want to learn more? Click ❓ above")
-
-        if st.session_state.get(f"guide_query_{ratio_key}", False):
-            _render_ratio_explanation(
-                ratio_key, ratio_display, company_name, formatted_value, search_query
-            )
+            with st.expander("ℹ️ Quick Context", expanded=False):
+                st.markdown(
+                    f'<div style="font-size:0.9em; '
+                    f'color:#888; line-height:1.6;">{explanation}</div>',
+                    unsafe_allow_html=True,
+                )
+                st.caption("💡 Click ❓ to ask the coach for detailed explanations")
 
 
 def _render_ratio_explanation(

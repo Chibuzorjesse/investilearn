@@ -8,6 +8,7 @@ from .ratio_calculator import (
     format_ratio_value,
     get_ratio_metrics,
 )
+from .ui.coach_panel import render_coach_panel
 from .visualizations import create_sankey_diagram
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "get_recommender",
     "InvestmentCoach",
     "get_coach",
+    "render_coach_panel",
 ]
