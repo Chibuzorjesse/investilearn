@@ -53,6 +53,7 @@ def render_ratios_section(
     ratio_category = st.selectbox(
         "Select Ratio Category",
         ["Profitability", "Liquidity", "Efficiency", "Leverage", "Valuation"],
+        key=f"ratio_category_{search_query}",
     )
 
     info_text, metrics_list = get_ratio_metrics(ratio_category)

@@ -513,6 +513,13 @@ def _fetch_sector_peer_data(sector):
             if not all([record["industry"], record["marketCap"]]):
                 continue
 
+            # Get valuation ratios from info (these don't require statements)
+            record["P/E Ratio"] = info.get("trailingPE")
+            record["P/B Ratio"] = info.get("priceToBook")
+            record["PEG Ratio"] = info.get("pegRatio")
+            record["Price to Sales"] = info.get("priceToSalesTrailing12Months")
+            record["Debt to Equity"] = info.get("debtToEquity")
+
             # Calculate ratios
             income = stock.financials
             balance = stock.balance_sheet
@@ -522,8 +529,11 @@ def _fetch_sector_peer_data(sector):
                 net_income = income.iloc[:, 0].get("Net Income")
                 revenue = income.iloc[:, 0].get("Total Revenue")
                 gross_profit = income.iloc[:, 0].get("Gross Profit")
+                ebit = income.iloc[:, 0].get("EBIT")
+                interest_expense = income.iloc[:, 0].get("Interest Expense")
                 equity = balance.iloc[:, 0].get("Stockholders Equity")
                 total_assets = balance.iloc[:, 0].get("Total Assets")
+                total_debt = balance.iloc[:, 0].get("Total Debt")
                 current_assets = balance.iloc[:, 0].get("Current Assets")
                 current_liabilities = balance.iloc[:, 0].get("Current Liabilities")
                 inventory = balance.iloc[:, 0].get("Inventory")
@@ -543,6 +553,14 @@ def _fetch_sector_peer_data(sector):
                 # Calculate Gross Profit Margin
                 if gross_profit is not None and revenue is not None and revenue != 0:
                     record["Gross Profit Margin"] = (gross_profit / revenue) * 100
+
+                # Calculate Interest Coverage
+                if ebit is not None and interest_expense is not None and interest_expense != 0:
+                    record["Interest Coverage"] = ebit / abs(interest_expense)
+
+                # Calculate Debt Ratio
+                if total_debt is not None and total_assets is not None and total_assets != 0:
+                    record["Debt Ratio"] = total_debt / total_assets
 
                 # Calculate Current Ratio
                 if (
@@ -577,6 +595,7 @@ def _map_ratio_name_to_column(ratio_name):
     """Map display ratio name to DataFrame column name"""
     # Handle both the key and display names
     mapping = {
+        # Profitability
         "ROE": "ROE",
         "ROE (Return on Equity)": "ROE",
         "Return on Equity (ROE)": "ROE",
@@ -585,8 +604,20 @@ def _map_ratio_name_to_column(ratio_name):
         "Return on Assets (ROA)": "ROA",
         "Net Profit Margin": "Net Profit Margin",
         "Gross Profit Margin": "Gross Profit Margin",
+        # Liquidity
         "Current Ratio": "Current Ratio",
         "Quick Ratio": "Quick Ratio",
+        # Leverage
+        "Debt to Equity": "Debt to Equity",
+        "Debt-to-Equity": "Debt to Equity",
+        "Interest Coverage": "Interest Coverage",
+        "Debt Ratio": "Debt Ratio",
+        # Valuation
+        "P/E Ratio": "P/E Ratio",
+        "P/B Ratio": "P/B Ratio",
+        "PEG Ratio": "PEG Ratio",
+        "Price to Sales": "Price to Sales",
+        "Price-to-Sales": "Price to Sales",
     }
     return mapping.get(ratio_name)
 
