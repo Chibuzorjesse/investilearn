@@ -408,6 +408,7 @@ def get_industry_comparison(info, ratio_name):
         cap_min, cap_max = 0, 2e9
 
     # Filter peers using pandas (instant!)
+    # Try industry-level comparison first
     peers = peer_data[
         (peer_data["industry"] == industry)
         & (peer_data["marketCap"] >= cap_min)
@@ -415,13 +416,21 @@ def get_industry_comparison(info, ratio_name):
         & (peer_data["ticker"] != ticker.upper())
     ]
 
+    # If not enough industry peers, fall back to sector-level comparison
+    if len(peers) < 3:
+        peers = peer_data[
+            (peer_data["marketCap"] >= cap_min)
+            & (peer_data["marketCap"] < cap_max)
+            & (peer_data["ticker"] != ticker.upper())
+        ]
+
     # Need at least 3 peers for valid comparison
     if len(peers) < 3:
         return None
 
     # Get the ratio column based on ratio_name
     ratio_col = _map_ratio_name_to_column(ratio_name)
-    if ratio_col not in peers.columns:
+    if ratio_col is None or ratio_col not in peers.columns:
         return None
 
     # Calculate average, excluding NaN values
@@ -438,7 +447,7 @@ _PEER_DATA_CACHE: dict = {}
 
 def _get_cached_peer_data(sector):
     """
-    Get or build cached DataFrame of peer company data for a sector
+    Get cached DataFrame of peer company data for a sector
 
     Args:
         sector (str): Company sector
@@ -447,35 +456,48 @@ def _get_cached_peer_data(sector):
         pd.DataFrame: Cached peer data with columns:
             - ticker, industry, sector, marketCap
             - ROE, ROA, Net Profit Margin, Gross Profit Margin, Current Ratio
+
+    Note:
+        This function ONLY returns cached data loaded from parquet files.
+        If sector is not cached, returns None.
+        Run scripts/refresh_data.py to regenerate cache files.
+    """
+    # Return cached data if available
+    if sector in _PEER_DATA_CACHE:
+        return _PEER_DATA_CACHE[sector]
+
+    # No cache available - return None instead of fetching from API
+    return None
+
+
+def _fetch_sector_peer_data(sector):
+    """
+    Fetch fresh peer data from API for a sector (used by refresh script only).
+
+    Args:
+        sector (str): Company sector
+
+    Returns:
+        pd.DataFrame: Fresh peer data from API
     """
     import time
 
     import pandas as pd
-    import streamlit as st
     import yfinance as yf
-
-    # Return cached data if available
-    if sector in _PEER_DATA_CACHE:
-        return _PEER_DATA_CACHE[sector]
 
     # Get tickers for this sector
     tickers = _get_peer_candidates(sector, None)
     if not tickers:
         return None
 
-    # Show progress to user
-    progress_text = f"Fetching {sector} sector data (one-time, ~10 sec)..."
-    progress_bar = st.progress(0, text=progress_text)
-
     # Fetch data for all tickers in batch
     peer_records = []
     total = len(tickers)
 
-    for idx, ticker in enumerate(tickers):
-        try:
-            # Update progress
-            progress_bar.progress((idx + 1) / total, text=progress_text)
+    print(f"   Fetching data for {total} companies...", end="", flush=True)
 
+    for ticker in tickers:
+        try:
             stock = yf.Ticker(ticker)
             info = stock.info
 
@@ -504,6 +526,7 @@ def _get_cached_peer_data(sector):
                 total_assets = balance.iloc[:, 0].get("Total Assets")
                 current_assets = balance.iloc[:, 0].get("Current Assets")
                 current_liabilities = balance.iloc[:, 0].get("Current Liabilities")
+                inventory = balance.iloc[:, 0].get("Inventory")
 
                 # Calculate ROE
                 if net_income is not None and equity is not None and equity != 0:
@@ -529,6 +552,14 @@ def _get_cached_peer_data(sector):
                 ):
                     record["Current Ratio"] = current_assets / current_liabilities
 
+                    # Calculate Quick Ratio
+                    if inventory is not None:
+                        quick_assets = current_assets - inventory
+                        record["Quick Ratio"] = quick_assets / current_liabilities
+                    else:
+                        # Approximation if no inventory data
+                        record["Quick Ratio"] = current_assets / current_liabilities * 0.8
+
             peer_records.append(record)
             time.sleep(0.1)  # Small delay between API calls
 
@@ -538,12 +569,6 @@ def _get_cached_peer_data(sector):
 
     # Create DataFrame
     df = pd.DataFrame(peer_records)
-
-    # Cache the result
-    _PEER_DATA_CACHE[sector] = df
-
-    # Clear progress bar
-    progress_bar.empty()
 
     return df
 

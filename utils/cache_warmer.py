@@ -8,7 +8,6 @@ import streamlit as st
 from .ratio_calculator import _PEER_DATA_CACHE, _load_sector_tickers
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
 def warm_sector_caches():
     """
     Load pre-computed sector data from parquet files.
@@ -45,7 +44,7 @@ def warm_sector_caches():
                     status[sector] = f"loaded ({len(sector_df)} companies)"
                 else:
                     # Cache file doesn't exist
-                    status[sector] = "no cache file - run scripts/refresh_data.py"
+                    status[sector] = "no cache - run scripts/refresh_data.py"
 
             except Exception as e:
                 status[sector] = f"error: {str(e)}"
@@ -59,11 +58,11 @@ def warm_sector_caches():
         progress_bar.empty()
 
     # Show warning if any sectors missing cache files
-    missing = [s for s, v in status.items() if "no cache file" in v]
+    missing = [s for s, v in status.items() if "no cache" in v]
     if missing:
         st.warning(
             f"⚠️ Missing cache files for {len(missing)} sectors. "
-            f"Run `uv run python scripts/refresh_data.py --all` to generate them."
+            f"Run `uv run python scripts/refresh_data.py --all`"
         )
 
     return status

@@ -60,7 +60,7 @@ if "caches_warmed" not in st.session_state:
     cache_stats = get_cache_stats()
     st.toast(
         f"✅ Loaded {cache_stats['total_companies']} companies "
-        f"across {cache_stats['sectors_cached']} sectors for instant comparisons!"
+        f"across {cache_stats['sectors_cached']} sectors!"
     )
 
 # Render sidebar (sets ai_enabled and confidence_level in session state)

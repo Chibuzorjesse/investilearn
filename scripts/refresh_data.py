@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore", message=".*No runtime found.*")
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.ratio_calculator import (  # noqa: E402
-    _get_cached_peer_data,
+    _fetch_sector_peer_data,
     _load_sector_tickers,
 )
 
@@ -46,8 +46,8 @@ def refresh_sector_data(sector: str, delay: float = 1.0) -> bool:
     time.sleep(delay)
 
     try:
-        # Fetch fresh data
-        sector_df = _get_cached_peer_data(sector)
+        # Fetch fresh data from API
+        sector_df = _fetch_sector_peer_data(sector)
 
         if sector_df is None or sector_df.empty:
             print(f"⚠️  No data returned for {sector}")
